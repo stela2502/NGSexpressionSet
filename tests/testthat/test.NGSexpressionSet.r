@@ -14,7 +14,7 @@ expect_equal( dim(dropS@data), c(100,10) )
 expect_equal( dim(dropS@samples), c( 10,21) )
 expect_equal( dim(dropS@annotation), c( 100,2) )
 
-expect_equal(PMID25158935$outpath, pwd())
+expect_equal(PMID25158935@outpath, pwd())
 
 
 #PMID25158935 <- createStats(PMID25158935, condition='GroupName', A='HSC', B='MPP1' )
