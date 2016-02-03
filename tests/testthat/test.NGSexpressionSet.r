@@ -1,10 +1,18 @@
 library('NGSexpressionSet')
 
-PMID25158935samples <- PMID25158935samples[ - grep ('ERR420370', PMID25158935samples[,'Sample'] ) ,]
-colnames(PMID25158935samples)[20] <- 'bam filename'
 PMID25158935 <- NGSexpressionSet( PMID25158935exp, PMID25158935samples,  Analysis = NULL, name='PMID25158935', namecol='Sample', namerow= 'GeneID', usecol=NULL , outpath = NULL)
 
-expect_equal(class(PMID25158935), c('NGSexpressionSet', 'ExpressionSet') )
+expect_equal(class(PMID25158935)[1], 'NGSexpressionSet' )
+
+red <- reduce.Obj ( PMID25158935, rownames(PMID25158935@data)[1:100], name='minimal' )
+expect_equal( class(red)[1], 'NGSexpressionSet' )
+expect_equal( dim(red@data), c(100,15) )
+expect_equal( red@name, 'minimal' )
+
+dropS <- drop.samples( red, samplenames=red@samples[1:5, red@sampleNamesCol])
+expect_equal( dim(dropS@data), c(100,10) )
+expect_equal( dim(dropS@samples), c( 10,21) )
+expect_equal( dim(dropS@annotation), c( 100,2) )
 
 expect_equal(PMID25158935$outpath, pwd())
 

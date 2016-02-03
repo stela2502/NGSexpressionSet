@@ -1,4 +1,4 @@
 library(testthat)
-library(ExpressionSet)
+library'StefansExpressionSet'
 
-test_check("ExpressionSet")
+test_check('StefansExpressionSet')

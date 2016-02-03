@@ -7,8 +7,8 @@ Maintainer: Stefan Lang <Stefan.Lang@med.lu.se>
 Description: NGSexpressionSet is a simple package to analyze NGS expression data
     sets. Expression analysis is based on the DESeq package. This package is mainly
     built to plot the results.
-Imports: DESeq, rsubread
-Depends: ExpressionSet
+Imports: DESeq, Rsubread
+Depends: StefansExpressionSet
 License: GPL-2
 Suggests:
     testthat

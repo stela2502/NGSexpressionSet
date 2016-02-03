@@ -1,5 +1,35 @@
-#' An S4 class to visualize Expression data.
-#'
+library('StefansExpressionSet')
+require('StefansExpressionSet')
+library('DESeq')
+require('DESeq')
+library('Rsubread')
+require('Rsubread')
+
+setClass( 
+		Class='StefansExpressionSet', 
+		representation = representation ( 
+				data='data.frame',
+				samples='data.frame',
+				ranks='numeric',
+				raw="data.frame",
+				annotation='data.frame',
+				outpath='character',
+				name='character',
+				rownamescol='character',
+				sampleNamesCol='character',
+				stats = 'list',
+				simple = 'character'
+		),
+		prototype(outpath ='./', name = 'StefansExpressionSet',
+				sampleNamesCol=NA_character_, 
+				stats=list(),
+				simple= c( 'outpath', 'rownamescol', 'sampleNamesCol', 'simple') )
+)
+
+#' @name NGSexpressionSet
+#' @title NGSexpressionSet
+#' @docType package
+#' @description  An S4 class to visualize Expression data from a NGS experiment.
 #' @slot data a data.frame containing the expression values for each gene x sample (gene = row)
 #' @slot samples a data.frame describing the columnanmes in the data column
 #' @slot annotation a data.frame describing the rownames in the data rows
@@ -8,35 +38,31 @@
 #' @slot rownamescol the column name in the annotation table that represents the rownames of the data table
 #' @slot sampleNamesCol the column name in the samples table that represents the colnames of the data table
 #' @slot stats the stats list for all stats created in the object
+#' @importMethodsFrom StefansExpressionSet StefansExpressionSet
 setClass( 
 		Class='NGSexpressionSet', 
 		representation = representation ( 
-				data='data.frame',
-				samples='data.frame',
-				annotation='data.frame',
-				outpath='character',
-				name='character',
-				rownamescol='character',
-				sampleNamesCol='character',
-				stats = 'list'
+			##	NGS = 'binary'
 		),
-		prototype(outpath ='./', name = 'ExpressionSet', 
+		contains='StefansExpressionSet',
+		prototype(outpath ='./', name = 'NGSexpressionSet', 
 				rownamescol=NA_character_, 
 				sampleNamesCol=NA_character_, 
 				stats=list() )
 )
-requireNamespace('ExpressionSet', quietly = TRUE)
-requireNamespace('DESeq', quietly = TRUE) 
-requireNamespace('rsubread', quietly = TRUE)
 
-#' Use most of ExpressionSet functionallity with minor changes to NGS data (like normalizing)
-#' 
-#' This package is mainly meant to plot the data - all important quantification or gene annotation is performed using 
-#' DEseq functionallity.
-#' 
-#' Read a set of bam files and perform the quantification (better do that without using this function!)
+
+#' @name read.bams
+#' @aliases read.bams,NGSexpressionSet-method
+#' @rdname read.bams-methods
+#' @docType methods
+#' @description  Use most of'StefansExpressionSet'functionallity with minor changes to NGS data (like normalizing)
+#' @description  This package is mainly meant to plot the data - all important quantification or gene
+#' @description  annotation is performed using DEseq functionallity. Read a set of bam files and perform
+#' @description  the quantification (better do that without using this function!)
 #' @param bamFiles a file containing one file name per line
 #' @param annotation the gene level annotation to use
+#' @title description of function read.bams
 #' @export 
 setGeneric('read.bams', ## Name
 	function ( bamFiles, annotation, GTF.featureType='exon', GTF.attrType = "gene_id", isPairedEnd = FALSE, nthreads = 2) { ## Argumente der generischen Funktion
@@ -55,12 +81,14 @@ setMethod('read.bams', signature = c ('NGSexpressionSet') ,
 	counts.tab
 })
 
-extends("NGSexpressionSet", "ExpressionSet")
+extends("NGSexpressionSet", 'StefansExpressionSet')
 
-#' create a new NGSexpressionSet object
-#' 
-#' This object is mainly used for plotting the data
-#' 
+#' @name NGSexpressionSet
+#' @aliases NGSexpressionSet,NGSexpressionSet-method
+#' @rdname NGSexpressionSet-methods
+#' @docType methods
+#' @description  create a new NGSexpressionSet object This object is mainly used for plotting the
+#' @description  data
 #' @param dat data frame or matrix containing all expression data
 #' @param Samples A sample description table
 #' @param Analysis If the samples table contains a Analysis column you can subset the data already here to the Analysis here (String). This table has to contain a column filenames that is expected to connect the sample table to the dat column names.
@@ -71,6 +99,7 @@ extends("NGSexpressionSet", "ExpressionSet")
 #' @param annotation The annotation table from e.g. affymetrix csv data
 #' @param newOrder The samples column name for the new order (default 'Order')
 #' @return A new NGSexpressionSet object
+#' @title description of function NGSexpressionSet
 #' @export 
 setGeneric('NGSexpressionSet', ## Name
 	function ( dat, Samples,  Analysis = NULL, name='WorkingSet', namecol='GroupName', namerow= 'GeneID', usecol='Use' , outpath = NULL) { ## Argumente der generischen Funktion
@@ -80,18 +109,23 @@ setGeneric('NGSexpressionSet', ## Name
 
 setMethod('NGSexpressionSet', signature = c ('data.frame'),
 	definition = function ( dat, Samples,  Analysis = NULL, name='WorkingSet', namecol='GroupName', namerow= 'GeneID', usecol='Use' , outpath = NULL) {
-	x <- ExpressionSet ( dat, class='NSGexpressionSet', Samples,  Analysis = Analysis, name=name, namecol=namecol, namerow= namerow, usecol= usecol, outpath =  outpath)
-	x
+	x <- StefansExpressionSet( dat, Samples,  Analysis = Analysis, name=name, namecol=namecol, namerow= namerow, usecol= usecol, outpath =  outpath)
+	as(x,'NGSexpressionSet')
 } )
 
 
 
-#' normalize the expression data
+#' @name normalize
+#' @aliases normalize,NGSexpressionSet-method
+#' @rdname normalize-methods
+#' @docType methods
+#' @description  normalize the expression data
 #' @param x The NGSexpressionSet
 #' @param readCounts The number of reads from each bam file or another value you want to normalize the data to
 #' @param to_gene_length FALSE whether or not to normalize the data to gene length
 #' @param geneLengthCol the column in the annotation data.frame to normalize the genes to
 #' @return the normalized data set (original data stored in NGS$raw
+#' @title description of function normalize
 #' @export 
 setGeneric('normalize', ## Name
 	function (  x, readCounts=NULL, to_gene_length=FALSE, geneLengthCol='transcriptLength' ) { ## Argumente der generischen Funktion
@@ -123,6 +157,14 @@ setMethod('normalize', signature = c ('NGSexpressionSet'),
 })
 
 
+#' @name getProbesetsFromValues
+#' @aliases getProbesetsFromValues,NGSexpressionSet-method
+#' @rdname getProbesetsFromValues-methods
+#' @docType methods
+#' @description 
+#' @param 
+#' @title description of function getProbesetsFromValues
+#' @export 
 setGeneric('getProbesetsFromValues', ## Name
 	function ( x, v='NULL', sample='NULL', mode='less' ) { ## Argumente der generischen Funktion
 		standardGeneric('getProbesetsFromValues') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -135,14 +177,6 @@ setMethod('getProbesetsFromValues', signature = c ('NGSexpressionSet'),
 })
 
 
-#' Select probesets, that show a certain level in expression for a single sample
-#' @param v The cutoff value
-#' @param sample The sample name
-#' @param mode one of 'less', 'more', 'onlyless' or 'equals' default 'less' ( <= )
-#' @examples 
-#' probes <- getProbesetsFromStats ( x, v=10, sample="A" ) 
-#' @return a list of probesets that has a expression less than 10 in sample A
-#' @export 
 setGeneric('getProbesetsFromValues', ## Name
 	function ( x, v='NULL', sample='NULL', mode='less' ) { ## Argumente der generischen Funktion
 		standardGeneric('getProbesetsFromValues') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -172,6 +206,19 @@ setMethod('getProbesetsFromValues', signature = c ('NGSexpressionSet'),
 })
 
 
+#' @name name_4_IDs
+#' @aliases name_4_IDs,NGSexpressionSet-method
+#' @rdname name_4_IDs-methods
+#' @docType methods
+#' @description  Select probesets, that show a certain level in expression for a single sample probes
+#' @description  <- getProbesetsFromStats ( x, v=10, sample="A" )
+#' @param v The cutoff value
+#' @param sample The sample name
+#' @param mode one of 'less', 'more', 'onlyless' or 'equals' default 'less' ( <= )
+#' @return a list of probesets that has a expression less than 10 in sample A
+#' @examples 
+#' @title description of function name_4_IDs
+#' @export 
 setGeneric('name_4_IDs', ## Name
 	function ( x, ids=NULL, geneNameCol='mgi_symbol' ) { ## Argumente der generischen Funktion
 		standardGeneric('name_4_IDs') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -186,6 +233,14 @@ setMethod('name_4_IDs', signature = c ('NGSexpressionSet'),
 	as.vector(x@annotation[match( ids,x@annotation[, x@rownamescol]),geneNameCol])
 })
 
+#' @name get_gene_list
+#' @aliases get_gene_list,NGSexpressionSet-method
+#' @rdname get_gene_list-methods
+#' @docType methods
+#' @description 
+#' @param 
+#' @title description of function get_gene_list
+#' @export 
 setGeneric('get_gene_list', ## Name
 	function (x, p_value = c ( 0.1,  1e-2 ,1e-3,1e-4,1e-5, 1e-6, 1e-7, 1e-8 ), geneNameCol='mgi_symbol' ) { ## Argumente der generischen Funktion
 		standardGeneric('get_gene_list') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -216,8 +271,12 @@ setMethod('get_gene_list', signature = c ('NGSexpressionSet'),
 	x
 })
 
-#' create heatmap for each statistics table and each pvalue cutoff
-#' 
+#' @name plot
+#' @aliases plot,NGSexpressionSet-method
+#' @rdname plot-methods
+#' @docType methods
+#' @description  create heatmap for each statistics table and each pvalue cutoff This function uses
+#' @description  internally the plot.heatmaps() function for each selected probeset list
 #' @param x the NGSexpressionSet
 #' @param pvalue a vector of pvalues to set as cut off
 #' @param Subset no idear at the moment....
@@ -226,7 +285,7 @@ setMethod('get_gene_list', signature = c ('NGSexpressionSet'),
 #' @param gene_centered collapse all genes with the same gene symbol into one value
 #' @param collaps how to collapse the data if gene_centered
 #' @param geneNameCol the name of the gene.symbol column in the annotation
-#' This function uses internally the plot.heatmaps() function for each selected probeset list
+#' @title description of function plot
 #' @export 
 setGeneric('plot', ## Name
 	function ( x, pvalue=c( 0.1,1e-2 ,1e-3,1e-4,1e-5, 1e-6, 1e-7, 1e-8 ), Subset=NULL , Subset.name= NULL, comp=NULL, gene_centered=F, collaps=NULL,geneNameCol= "mgi_symbol") { ## Argumente der generischen Funktion
@@ -283,61 +342,20 @@ setMethod('plot', signature = c ('NGSexpressionSet'),
 })
 
 
-setGeneric('collaps', ## Name
-	function ( dataObj, what=c('median','mean','sd','sum' ) ) { ## Argumente der generischen Funktion
-		standardGeneric('collaps') ## der Aufruf von standardGeneric sorgt für das Dispatching
-	}
-)
 
-setMethod('collaps', signature = c ('NGSexpressionSet'),
-	definition = function ( dataObj, what=c('median','mean','sd','sum' ) ) {
-	UseMethod('collaps', dataObj)
-})
 
-#' merge the groups in the dataset into one single column
+#' @name removeBatch
+#' @aliases removeBatch,NGSexpressionSet-method
+#' @rdname removeBatch-methods
+#' @docType methods
+#' @description  merge the groups in the dataset into one single column The sample description is
+#' @description  restricted to the first entry in each group. Most variables in the sample description
+#' @description  table might be useless after this collape
 #' @param dataObj the NGSexpressionSet
 #' @param what merge by 'median','mean','sd' or 'sum'
-#' 
-#' The sample description is restricted to the first entry in each group.
-#' Most variables in the sample description table might be useless after this collape
-#' 
 #' @return the collapsed NGSexpressionSet
+#' @title description of function removeBatch
 #' @export 
-setGeneric('collaps', ## Name
-	function (dataObj, what=c('median','mean','sd','sum' ) ) { ## Argumente der generischen Funktion
-		standardGeneric('collaps') ## der Aufruf von standardGeneric sorgt für das Dispatching
-	}
-)
-
-setMethod('collaps', signature = c ('NGSexpressionSet'),
-	definition = function (dataObj, what=c('median','mean','sd','sum' ) ) {
-	u <- unique(as.vector(dataObj@samples$GroupName))
-	m <- length(u)
-	mm <-  matrix ( rep(0,m * nrow(dataObj@data)), ncol=m)
-	colnames(mm) <- u
-	rownames(mm) <- rownames(dataObj@data)
-	f <- NULL
-	switch( what,
-			median = f<- function (x ) { median(x) },
-			mean = f <- function(x) { mean(x) },
-			sd = f <- function(x) { sd(x) },
-			sum = f <-function(x) { sum(x)}
-	);
-	if ( is.null(f) ) {
-		stop("Please set what to one of 'median','mean','sd','sum'" )
-	}
-	new_samples <- NULL
-	for ( i in u ){
-		all <- which(as.vector(dataObj$samples$GroupName) == i )
-		new_samples <- rbind ( new_samples, dataObj$samples[all[1],] )
-		mm[,i] <- apply( dataObj$data[ , all],1,f)
-	}
-	dataObj$name = paste( dataObj$name, what, sep='_')
-	dataObj$data <- mm
-	dataObj$samples <- new_samples
-	dataObj
-})
-
 setGeneric('removeBatch', ## Name
 	function ( x, phenotype ) { ## Argumente der generischen Funktion
 		standardGeneric('removeBatch') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -362,6 +380,14 @@ setMethod('removeBatch', signature = c ('NGSexpressionSet'),
 	x
 })
 
+#' @name check
+#' @aliases check,NGSexpressionSet-method
+#' @rdname check-methods
+#' @docType methods
+#' @description 
+#' @param 
+#' @title description of function check
+#' @export 
 setGeneric('check', ## Name
 	function ( x , genes=NULL, cutoff=0.77 ) { ## Argumente der generischen Funktion
 		standardGeneric('check') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -372,15 +398,6 @@ setMethod('check', signature = c ('NGSexpressionSet'),
 	definition = function ( x , genes=NULL, cutoff=0.77 ) {
 	UseMethod('check', x)
 })
-#' this check is testing how many percent of the total reads are taken from the first x percent of the genes
-#' 
-#' @param x the NGSexpressionSet
-#' @param genes see reads.taken 
-#' @param cutoff = 0.77 a good expression dataset should not use more than 77% of the reads in the top 5%
-#' 
-#' this function calls reads.taken.NGSexpressionSet internally.
-#' @return a list of samples which have passed the test
-#' @export 
 setGeneric('check', ## Name
 	function (x, genes=NULL, cutoff = 0.77 ) { ## Argumente der generischen Funktion
 		standardGeneric('check') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -393,6 +410,18 @@ setMethod('check', signature = c ('NGSexpressionSet'),
 	names(which(percent5$reads.taken > cutoff )) ## obtained experimentally using Jennies HSC dataset
 })
 
+#' @name reads.taken
+#' @aliases reads.taken,NGSexpressionSet-method
+#' @rdname reads.taken-methods
+#' @docType methods
+#' @description  this check is testing how many percent of the total reads are taken from the first
+#' @description  x percent of the genes this function calls reads.taken.NGSexpressionSet internally.
+#' @param x the NGSexpressionSet
+#' @param genes see reads.taken 
+#' @param cutoff = 0.77 a good expression dataset should not use more than 77% of the reads in the top 5%
+#' @return a list of samples which have passed the test
+#' @title description of function reads.taken
+#' @export 
 setGeneric('reads.taken', ## Name
 	function ( x , percentile= 0.05, tf=NULL) { ## Argumente der generischen Funktion
 		standardGeneric('reads.taken') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -403,12 +432,6 @@ setMethod('reads.taken', signature = c ('NGSexpressionSet'),
 	definition = function ( x , percentile= 0.05, tf=NULL) {
 	UseMethod('reads.taken', x)
 })
-#' calculates how many reads are consumed by the top genes
-#' @param x the NGSexpressionSet
-#' @param percentile how many of the top genes to use (0.05)
-#' @param tf further subselect the top genes using these genes
-#' @return a list of values - please read the source code of this function
-#' @export 
 setGeneric('reads.taken', ## Name
 	function ( x, percentile= 0.05, tf=NULL ) { ## Argumente der generischen Funktion
 		standardGeneric('reads.taken') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -444,9 +467,19 @@ setMethod('reads.taken', signature = c ('NGSexpressionSet'),
 })
 	
 
-#' performes a set of preprocess function used by DEseq
+#' @name preprocess
+#' @aliases preprocess,NGSexpressionSet-method
+#' @rdname preprocess-methods
+#' @docType methods
+#' @description  calculates how many reads are consumed by the top genes performes a set of preprocess
+#' @description  function used by DEseq Do not use
 #' @param x the NGSexpressionSet
-#' Do not use
+#' @param percentile how many of the top genes to use (0.05)
+#' @param tf further subselect the top genes using these genes
+#' @param x the NGSexpressionSet
+#' @return a list of values - please read the source code of this function
+#' @title description of function preprocess
+#' @export 
 setGeneric('preprocess', ## Name
 	function (x) { ## Argumente der generischen Funktion
 		standardGeneric('preprocess') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -467,61 +500,16 @@ setMethod('preprocess', signature = c ('NGSexpressionSet'),
 	x
 })
 
-setGeneric('z.score', ## Name
-	function ( m ) { ## Argumente der generischen Funktion
-		standardGeneric('z.score') ## der Aufruf von standardGeneric sorgt für das Dispatching
-	}
-)
 
-setMethod('z.score', signature = c ('NGSexpressionSet'),
-	definition = function ( m ) {
-	UseMethod('z.score', m)
-})
-
-#' z score the matrix
-#' @param m the matrix of column = samples and rows = genes
-#' @return the z scored matrix
-#' @export 
-setGeneric('z.score.matrix', ## Name
-	function (m ) { ## Argumente der generischen Funktion
-		standardGeneric('z.score.matrix') ## der Aufruf von standardGeneric sorgt für das Dispatching
-	}
-)
-
-setMethod('z.score.matrix', signature = c ('NGSexpressionSet'),
-	definition = function (m ) {
-	rn <- rownames( m )
-	me <- apply( m, 1, mean )
-	sd <- apply( m, 1, sd )
-	sd[which(sd==0)] <- 1e-8
-	m <- (m - me) /sd
-	rownames(m) <- rn
-	m
-})
-
-#' zscore the ngs dataset
+#' @name anayse_working_set
+#' @aliases anayse_working_set,NGSexpressionSet-method
+#' @rdname anayse_working_set-methods
+#' @docType methods
+#' @description  zscore the ngs dataset
 #' @param m the NGSexpressionSet
 #' @return The z scored NGSexpressionSet
+#' @title description of function anayse_working_set
 #' @export 
-setGeneric('z.score', ## Name
-	function (m) { ## Argumente der generischen Funktion
-		standardGeneric('z.score') ## der Aufruf von standardGeneric sorgt für das Dispatching
-	}
-)
-
-setMethod('z.score', signature = c ('NGSexpressionSet'),
-	definition = function (m) {
-	#m$data <- z.score( as.matrix( m$data ))
-	rn <- rownames( m$data )
-	me <- apply( m$data, 1, mean )
-	sd <- apply( m$data, 1, sd )
-	sd[which(sd==0)] <- 1e-8
-	m$data <- (m$data - me) /sd
-	rownames(m$data) <- rn
-	m
-})
-
-
 setGeneric('anayse_working_set', ## Name
 	function ( dataOBJ, name,  p_values = c ( 0.1,  1e-2 ,1e-3,1e-4,1e-5, 1e-6, 1e-7, 1e-8 ),geneNameCol= "mgi_symbol", batchCorrect=NULL) { ## Argumente der generischen Funktion
 		standardGeneric('anayse_working_set') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -543,6 +531,14 @@ setMethod('anayse_working_set', signature = c ('NGSexpressionSet'),
 	dataOBJ
 })
 
+#' @name simpleAnova
+#' @aliases simpleAnova,NGSexpressionSet-method
+#' @rdname simpleAnova-methods
+#' @docType methods
+#' @description 
+#' @param 
+#' @title description of function simpleAnova
+#' @export 
 setGeneric('simpleAnova', ## Name
 	function (x, samples.col='GroupName', padjMethod='BH' ) { ## Argumente der generischen Funktion
 		standardGeneric('simpleAnova') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -582,14 +578,19 @@ setMethod('simpleAnova', signature = c ('NGSexpressionSet'),
 })
 
 
-#' calculate staistics on all possible groupings using the DEseq nbinomTest test
+#' @name createStats
+#' @aliases createStats,NGSexpressionSet-method
+#' @rdname createStats-methods
+#' @docType methods
+#' @description  calculate staistics on all possible groupings using the DEseq nbinomTest test Both
+#' @description  together create the group 'A vs. B'
 #' @param x the NGSexpressionSet
 #' @param condition the grouping column in the samples data.frame
 #' @param files write the statistics tables (FALSE)
 #' @param A the first component to analyze (Group A)
 #' @param B the second component to analyze (Group B)
-#' Both together create the group 'A vs. B'
 #' @return the NGSexpressionSet with a set of ststs tables
+#' @title description of function createStats
 #' @export 
 setGeneric('createStats', ## Name
 	function (x, condition, files=F, A=NULL, B=NULL) { ## Argumente der generischen Funktion
@@ -646,6 +647,14 @@ setMethod('createStats', signature = c ('NGSexpressionSet'),
 	x
 })
 
+#' @name describe.probeset
+#' @aliases describe.probeset,NGSexpressionSet-method
+#' @rdname describe.probeset-methods
+#' @docType methods
+#' @description 
+#' @param 
+#' @title description of function describe.probeset
+#' @export 
 setGeneric('describe.probeset', ## Name
 	function ( x, probeset ) { ## Argumente der generischen Funktion
 		standardGeneric('describe.probeset') ## der Aufruf von standardGeneric sorgt für das Dispatching
@@ -691,14 +700,20 @@ setMethod('describe.probeset', signature = c ('NGSexpressionSet'),
 })
 
 
-#' getProbesetsFromStats returns a list of probesets (the rownames from the data matrix) for a restriction of a list of stat comparisons
+#' @name getProbesetsFromStats
+#' @aliases getProbesetsFromStats,NGSexpressionSet-method
+#' @rdname getProbesetsFromStats-methods
+#' @docType methods
+#' @description  getProbesetsFromStats returns a list of probesets (the rownames from the data matrix)
+#' @description  for a restriction of a list of stat comparisons probes <- getProbesetsFromStats (
+#' @description  x, v=1e-4, pos="adj.P.Val" )
 #' @param v The cutoff value
 #' @param pos The column in the stats tables to base the selection on
 #' @param Comparisons A list of comparisons to check (all if left out)
 #' @param mode one of 'less', 'more', 'onlyless' or 'equals' default 'less' ( <= )
-#' @examples 
-#' probes <- getProbesetsFromStats ( x, v=1e-4, pos="adj.P.Val" ) 
 #' @return a list of probesets that shows an adjusted p value below 1e-4
+#' @examples 
+#' @title description of function getProbesetsFromStats
 #' @export 
 setGeneric('getProbesetsFromStats', ## Name
 	function ( x, v=1e-4, pos='padj', mode='less', Comparisons=NULL ) { ## Argumente der generischen Funktion
@@ -732,14 +747,6 @@ setMethod('getProbesetsFromValues', signature = c ('NGSexpressionSet'),
 	UseMethod('getProbesetsFromValues', x)
 })
 
-#' Select probesets, that show a certain level in expression for a single sample
-#' @param v The cutoff value
-#' @param sample The sample name
-#' @param mode one of 'less', 'more', 'onlyless' or 'equals' default 'less' ( <= )
-#' @examples 
-#' probes <- getProbesetsFromStats ( x, v=10, sample="A" ) 
-#' @return a list of probesets that has a expression less than 10 in sample A
-#' @export 
 setGeneric('getProbesetsFromValues', ## Name
 	function ( x, v=NULL, sample=NULL, mode='less' ) { ## Argumente der generischen Funktion
 		standardGeneric('getProbesetsFromValues') ## der Aufruf von standardGeneric sorgt für das Dispatching
