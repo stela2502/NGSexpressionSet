@@ -14,5 +14,6 @@ Suggests:
     testthat
 Collate:
     'NGSexpressionSet.R'
+    'SingleCellsNGS.R'
 LazyData: true
 RoxygenNote: 5.0.1

@@ -1,4 +1,4 @@
-library('NGSexpressionSet')
+#library('NGSexpressionSet')
 
 PMID25158935 <- NGSexpressionSet( PMID25158935exp, PMID25158935samples,  Analysis = NULL, name='PMID25158935', namecol='Sample', namerow= 'GeneID', usecol=NULL , outpath = NULL)
 

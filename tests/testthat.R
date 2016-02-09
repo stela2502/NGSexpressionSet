@@ -1,4 +1,4 @@
 library(testthat)
-library'StefansExpressionSet'
+library(NGSexpressionSet)
 
-test_check('StefansExpressionSet')
+test_check('NGSexpressionSet')
