@@ -1,7 +1,13 @@
 # Usage
 
-At the moment this is no working R package as I have not set up all help files and am most likely missing a ton of other things too.
+The package builds on StefansExpressionLib - please install that first.
 
-But I can use the R libs anyhow by sourceing in all R/*.R files and the load_libs.R file.
+## Install
 
-At the moment this can be seen as a private, horribly documented piece of work.
+library(devtools)
+
+install_github('stela2502/NGSexpressionSet')
+
+or
+
+install_github('stela2502/NGSexpressionSet', build_vignettes=FALSE)

@@ -71,7 +71,7 @@ setGeneric('normalize', ## Name
 			standardGeneric('normalize') ## der Aufruf von standardGeneric sorgt für das Dispatching
 		}
 )
-setMethod('normalize', signature = c ('SingeCellsNGS'),
+setMethod('normalize', signature = c ('SingleCellsNGS'),
 		definition = function (  object, ..., reads=600, name='normalized' ) {
 			if ( length( object@samples$counts ) == 0 ) {
 				object@samples$counts <- apply( object@data, 2, sum)
