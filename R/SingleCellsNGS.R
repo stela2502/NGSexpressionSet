@@ -128,7 +128,7 @@ setMethod('z.score', signature = c ('SingleCellsNGS'),
 									x}
 						)
 				)
-				m@data <- ret
+				m@data <- data.frame(ret)
 				m@zscored = TRUE
 			}
 			m
