@@ -195,15 +195,32 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 			brks[length(brks)] = brks[length(brks)] + 0.1
 			dat.ss$z <- cut( dat.ss$z, breaks= brks)
 			
-			list ( plot = ggplot2::ggplot(dat.ss, ggplot2::aes(x=Sample,y=Gene.Symbol))
-							+ ggplot2::geom_tile(ggplot2::aes(fill=z))
-							+ ggplot2::scale_fill_manual( values = c( 'gray', gplots::bluered(length(brks) -2  )) ) 
-							+ ggplot2::theme(
-									legend.position= 'bottom',
-									axis.text.x=ggplot2::element_blank(),
-									axis.ticks.x=ggplot2::element_line(color=ss$colrss),
-									axis.ticks.length=ggplot2::unit(0.6,"cm")
-							)
-							+ ggplot2::labs( y=''),
-					not.in = setdiff( glist, rownames(isect@data)) )
+			
+			p = ( ggplot2::ggplot(dat.ss, ggplot2::aes(x=SampleName,y=ProbeName))
+						+ ggplot2::geom_tile(ggplot2::aes(fill=z)) 
+						+ ggplot2::scale_fill_manual( values =  c( 'gray', gplots::bluered(length(brks) -2  )) ) 
+						+ ggplot2::theme(
+								legend.position= 'bottom',
+								axis.text.x=ggplot2::element_blank(),
+#axis.ticks.x=element_line(color=ss$colrss),
+								axis.ticks.length=ggplot2::unit(0.00,"cm")
+						)+ labs( y='') )
+			if ( ncol(dat.ss) == 5 ){
+				p <- p + ggplot2::facet_grid( ColorGroup ~ Group,scales="free", space='free')
+			}else if ( ncol(dat.ss) == 4 ) {
+				p <- p + ggplot2::facet_grid( . ~ Group,scales="free", space='free')
+			}
+			list ( plot = p, not.in = setdiff( glist, rownames(isect@data)) )
+			
+#			list ( plot = ggplot2::ggplot(dat.ss, ggplot2::aes(x=Sample,y=Gene.Symbol))
+#							+ ggplot2::geom_tile(ggplot2::aes(fill=z))
+#							+ ggplot2::scale_fill_manual( values = c( 'gray', gplots::bluered(length(brks) -2  )) ) 
+#							+ ggplot2::theme(
+#									legend.position= 'bottom',
+#									axis.text.x=ggplot2::element_blank(),
+#									axis.ticks.x=ggplot2::element_line(color=ss$colrss),
+#									axis.ticks.length=ggplot2::unit(0.6,"cm")
+#							)
+#							+ ggplot2::labs( y=''),
+#					not.in = setdiff( glist, rownames(isect@data)) )
 		})
