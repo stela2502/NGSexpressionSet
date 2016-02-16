@@ -1,10 +1,13 @@
 #library('NGSexpressionSet')
 
-PMID25158935 <- NGSexpressionSet( PMID25158935exp, PMID25158935samples,  Analysis = NULL, name='PMID25158935', namecol='Sample', namerow= 'GeneID', usecol=NULL , outpath = NULL)
+PMID25158935 <- NGSexpressionSet( PMID25158935exp, PMID25158935samples, Analysis = NULL, name='PMID25158935', namecol='Sample',		namerow= 'GeneID', usecol=NULL , outpath = '')
 
 expect_equal(class(PMID25158935)[1], 'NGSexpressionSet' )
 
-red <- reduce.Obj ( PMID25158935, rownames(PMID25158935@data)[1:100], name='minimal' )
+red2 <- reduce.Obj ( PMID25158935, rownames(PMID25158935@data)[1:100], name='minimal' )
+expect_true(  all.equal( red2, red) , 'saved data OK' )
+
+
 expect_equal( class(red)[1], 'NGSexpressionSet' )
 expect_equal( dim(red@data), c(100,15) )
 expect_equal( red@name, 'minimal' )

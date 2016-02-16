@@ -43,13 +43,13 @@ extends("SingleCellsNGS","NGSexpressionSet")
 #' @title description of function SingleCellsNGS
 #' @export 
 setGeneric('SingleCellsNGS', ## Name
-		function ( dat, Samples,  Analysis = NULL, name='WorkingSet', namecol='GroupName', namerow= 'GeneID', usecol='Use' , outpath = NULL) { ## Argumente der generischen Funktion
+		function ( dat, Samples,  Analysis = NULL, name='WorkingSet', namecol='GroupName', namerow= 'GeneID', usecol='Use' , outpath = '') { ## Argumente der generischen Funktion
 			standardGeneric('SingleCellsNGS') ## der Aufruf von standardGeneric sorgt für das Dispatching
 		}
 )
 
 setMethod('SingleCellsNGS', signature = c ('data.frame'),
-		definition = function ( dat, Samples,  Analysis = NULL, name='WorkingSet', namecol='GroupName', namerow= 'GeneID', usecol='Use' , outpath = NULL) {
+		definition = function ( dat, Samples,  Analysis = NULL, name='WorkingSet', namecol='GroupName', namerow= 'GeneID', usecol='Use' , outpath = '') {
 			x <- StefansExpressionSet( dat, Samples,  Analysis = Analysis, name=name, namecol=namecol, namerow= namerow, usecol= usecol, outpath =  outpath)
 			as(x,'SingleCellsNGS')
 		} )
@@ -161,7 +161,7 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 			if ( is.null(colrs) ){
 				colrs = rainbow( length(unique(isect@samples[,colCol])))
 			}
-			if ( ! isect@gnorm ) {isect <- z.score(isect)}
+			if ( ! isect@zscored ) {isect <- z.score(isect)}
 			dat.ss <- melt.StefansExpressionSet ( isect, probeNames=isect@rownamescol, groupcol=groupCol,colCol=colCol)
 			#dat.ss <- dat[which(is.na(match(dat$Gene.Symbol,isect))==F),]
 			colnames(dat.ss) <- c( 'Gene.Symbol', 'Sample', 'Expression', 'Group', 'ColorGroup' )
@@ -169,11 +169,12 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 						n <- which(x==0)
 						if ( length(x) - length(n) > 1 ){
 							x[-n] <- scale(as.vector(t(x[-n])))
+							x[n] <- -20
 						}
 						else {
 							x[] = -20
 						}
-						x[n] <- -20
+						
 						x
 					}
 			)
@@ -195,8 +196,8 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 			brks[length(brks)] = brks[length(brks)] + 0.1
 			dat.ss$z <- cut( dat.ss$z, breaks= brks)
 			
-			
-			p = ( ggplot2::ggplot(dat.ss, ggplot2::aes(x=SampleName,y=ProbeName))
+			browser()
+			p = ( ggplot2::ggplot(dat.ss, ggplot2::aes(x=Sample,y=Gene.Symbol))
 						+ ggplot2::geom_tile(ggplot2::aes(fill=z)) 
 						+ ggplot2::scale_fill_manual( values =  c( 'gray', gplots::bluered(length(brks) -2  )) ) 
 						+ ggplot2::theme(
@@ -204,10 +205,10 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 								axis.text.x=ggplot2::element_blank(),
 #axis.ticks.x=element_line(color=ss$colrss),
 								axis.ticks.length=ggplot2::unit(0.00,"cm")
-						)+ labs( y='') )
-			if ( ncol(dat.ss) == 5 ){
-				p <- p + ggplot2::facet_grid( ColorGroup ~ Group,scales="free", space='free')
-			}else if ( ncol(dat.ss) == 4 ) {
+						)+ ggplot2::labs( y='') )
+			if ( ncol(dat.ss) == 8 ){
+				p <- p + ggplot2::facet_grid( colrss ~ Group,scales="free", space='free')
+			}else if ( ncol(dat.ss) == 7 ) {
 				p <- p + ggplot2::facet_grid( . ~ Group,scales="free", space='free')
 			}
 			list ( plot = p, not.in = setdiff( glist, rownames(isect@data)) )

@@ -8,7 +8,7 @@
 \usage{
 SingleCellsNGS(dat, Samples, Analysis = NULL, name = "WorkingSet",
   namecol = "GroupName", namerow = "GeneID", usecol = "Use",
-  outpath = NULL)
+  outpath = "")
 }
 \arguments{
 \item{dat}{data frame or matrix containing all expression data}
