@@ -119,20 +119,76 @@ setMethod('z.score', signature = c ('SingleCellsNGS'),
 									i = i+1
 									n <- which(x==0)
 									if ( length(x) - length(n) > 1 ){
-										x[-n] <- scale(as.vector(t(x[-n])))
+										if (length(n) == 0 ){
+											x <-  scale(as.vector(t(x)))
+										}
+										else {
+											x[-n] <- scale(as.vector(t(x[-n])))
+											x[n] <- -20
+										}
+										
 									}
 									else {
 										x[] = -20
 									}
-									x[n] <- -20
 									x}
 						)
 				)
 				m@data <- data.frame(ret)
+				colnames(m@data)<- colnames(m@raw)
 				m@zscored = TRUE
 			}
 			m
 		})
+
+#' @name defineHeatmapColors
+#' @aliases defineHeatmapColors,SingleCellsNGS-method
+#' @rdname defineHeatmapColors-methods
+#' @docType methods
+#' @description  uses ggplot2 to plot heatmaps
+#' @param merged the merged data object with the Expression column that should be colored
+#' @param colrs and optional colors vector( gray + bluered for data and rainbow for samples)
+#' @title description of function gg.heatmap.list
+#' @return a list with the modified merged table and the colors vector
+#' @export 
+setGeneric('defineHeatmapColors', ## Name
+		function ( melted,..., colrs=NULL) { ## Argumente der generischen Funktion
+			standardGeneric('defineHeatmapColors') ## der Aufruf von standardGeneric sorgt für das Dispatching
+		}
+)
+
+setMethod('defineHeatmapColors', signature = c ( 'data.frame') ,
+		definition = function (melted, colrs=NULL ){
+			if ( is.factor( melted$Expression )) {
+				## here might be some row grouping going on!
+				d <- levels(melted$Expression)[melted$Expression]
+				prob.id <- which(is.na(as.numeric(d))==T)
+				treat.separate <- unique(d[prob.id])
+				n <- as.numeric(d[-prob.id])
+				brks= c( -20.1, as.vector(quantile(n[which(n != -20)],seq(0,1,by=0.1)) ))
+				brks = unique(brks)
+				d[-prob.id]  <- brks [cut( n, breaks= brks)]
+				melted$Expression <- factor( d, levels= c(brks, treat.separate ) )
+				colors= c(
+						'gray', 
+						gplots::bluered(length(brks) -2  ), ## the expression
+						rainbow( length(treat.separate) ) ## the sample descriptions
+				)
+			}
+			else {
+				n <- as.numeric(melted$Expression )
+				brks= c( -20.1, as.vector(quantile(n[which(n != -20)],seq(0,1,by=0.1)) ))
+				brks = unique(brks)
+				melted$Expression <- factor( brks [cut( n, breaks= brks)] , levels= c(brks) )
+				
+				colors= c(
+								'gray', 
+								gplots::bluered(length(brks) -2  ) ## the expression
+				)
+			}
+			list (melted = melted, colors = colors)
+		}
+)
 
 
 #' @name gg.heatmap.list
@@ -155,33 +211,20 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 			}else {
 				isect <- dat
 			}
-			if ( is.null(colCol)){
-				colCol <- groupCol
-			}
 			if ( is.null(colrs) ){
 				colrs = rainbow( length(unique(isect@samples[,colCol])))
 			}
 			if ( ! isect@zscored ) {isect <- z.score(isect)}
 			dat.ss <- melt.StefansExpressionSet ( isect, probeNames=isect@rownamescol, groupcol=groupCol,colCol=colCol)
 			#dat.ss <- dat[which(is.na(match(dat$Gene.Symbol,isect))==F),]
-			colnames(dat.ss) <- c( 'Gene.Symbol', 'Sample', 'Expression', 'Group', 'ColorGroup' )
-			dat.ss$z <- ave(dat.ss$Expression, dat.ss$Gene.Symbol, FUN = function (x)  {
-						n <- which(x==0)
-						if ( length(x) - length(n) > 1 ){
-							x[-n] <- scale(as.vector(t(x[-n])))
-							x[n] <- -20
-						}
-						else {
-							x[] = -20
-						}
-						
-						x
-					}
-			)
-			samp.cast <- reshape2::dcast(dat.ss,Gene.Symbol~Sample,mean,value.var="z")
-			samp.mat <- as.matrix(samp.cast[,2:ncol(samp.cast)])
-			ord.genes <-
-					as.vector(samp.cast[hclust(dist(samp.mat),method="ward.D")$order,1])
+			colnames(dat.ss) <- c( 'Gene.Symbol', 'Sample', 'Expression', 'Group', 
+					paste('ColorGroup', 1:10) )[1:ncol(dat.ss)]
+			r <- defineHeatmapColors( dat.ss )
+			dat.ss <- r$melted
+			ord.genes <- rownames(isect@data)[hclust(dist(isect@data),method="ward.D2")$order]
+			if ( ! is.null(colCol) ){
+				ord.genes <- c( ord.genes,colCol  )
+			}
 			dat.ss$Gene.Symbol <- with(dat.ss,factor(Gene.Symbol,levels =
 									unique(as.character(ord.genes))))
 			dat.ss$Sample <- with(dat.ss,factor(Sample,levels =
@@ -190,38 +233,18 @@ setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 									unique(as.character(Group))))
 			dat.ss$colrss <- colrs[dat.ss$Group]
 			ss <-dat.ss[which(dat.ss$Gene.Symbol==dat.ss$Gene.Symbol[1]),]
-			brks= c( -20.1, as.vector(quantile(dat.ss$z[which(dat.ss$z != -20)],seq(0,1,by=0.1)) ))
-			brks = unique(brks)
-			print ( brks )
-			brks[length(brks)] = brks[length(brks)] + 0.1
-			dat.ss$z <- cut( dat.ss$z, breaks= brks)
-			
-			browser()
 			p = ( ggplot2::ggplot(dat.ss, ggplot2::aes(x=Sample,y=Gene.Symbol))
-						+ ggplot2::geom_tile(ggplot2::aes(fill=z)) 
-						+ ggplot2::scale_fill_manual( values =  c( 'gray', gplots::bluered(length(brks) -2  )) ) 
+						+ ggplot2::geom_tile(ggplot2::aes(fill=Expression)) 
+						+ ggplot2::scale_fill_manual( values =  r$colors ) 
 						+ ggplot2::theme(
 								legend.position= 'bottom',
 								axis.text.x=ggplot2::element_blank(),
-#axis.ticks.x=element_line(color=ss$colrss),
 								axis.ticks.length=ggplot2::unit(0.00,"cm")
 						)+ ggplot2::labs( y='') )
-			if ( ncol(dat.ss) == 8 ){
+			if ( ncol(dat.ss) == 6 ){
 				p <- p + ggplot2::facet_grid( colrss ~ Group,scales="free", space='free')
-			}else if ( ncol(dat.ss) == 7 ) {
+			}else if ( ncol(dat.ss) == 5 ) {
 				p <- p + ggplot2::facet_grid( . ~ Group,scales="free", space='free')
 			}
 			list ( plot = p, not.in = setdiff( glist, rownames(isect@data)) )
-			
-#			list ( plot = ggplot2::ggplot(dat.ss, ggplot2::aes(x=Sample,y=Gene.Symbol))
-#							+ ggplot2::geom_tile(ggplot2::aes(fill=z))
-#							+ ggplot2::scale_fill_manual( values = c( 'gray', gplots::bluered(length(brks) -2  )) ) 
-#							+ ggplot2::theme(
-#									legend.position= 'bottom',
-#									axis.text.x=ggplot2::element_blank(),
-#									axis.ticks.x=ggplot2::element_line(color=ss$colrss),
-#									axis.ticks.length=ggplot2::unit(0.6,"cm")
-#							)
-#							+ ggplot2::labs( y=''),
-#					not.in = setdiff( glist, rownames(isect@data)) )
 		})
