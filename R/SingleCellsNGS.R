@@ -206,6 +206,7 @@ setMethod('defineHeatmapColors', signature = c ( 'data.frame') ,
 setMethod('gg.heatmap.list', signature = c ( 'SingleCellsNGS') ,
 		definition = function (dat,glist=NULL, colrs=NULL, groupCol='GroupID', colCol=NULL) {
 			
+			print ( "You are using the latest version!")
 			if ( ! is.null(glist) ) {
 				isect <- reduce.Obj ( dat, glist)
 			}else {
