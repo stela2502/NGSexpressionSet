@@ -19,7 +19,7 @@ setGeneric('bestGrouping',
 			standardGeneric('bestGrouping')
 		}
 )
-setMethod('function', signature = c ('SingleCellsNGS'),
+setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 		definition = function (x, group, bestColname='QualifiedGrouping' , cutoff=0.5) {
 			rf <- randomForest( x= t(as.matrix(x@data)), y=x@samples[, group],ntree=2000 )
 			t <- table( observed= x@samples[,group ], predicted = rf$predicted )

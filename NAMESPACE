@@ -3,6 +3,7 @@
 export(NGSexpressionSet)
 export(SingleCellsNGS)
 export(anayse_working_set)
+export(bestGrouping)
 export(check.depth)
 export(createStats)
 export(defineHeatmapColors)
