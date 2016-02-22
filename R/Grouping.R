@@ -21,8 +21,13 @@ setGeneric('bestGrouping',
 )
 setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 		definition = function (x, group, bestColname='QualifiedGrouping' , cutoff=0.5) {
-			rf <- randomForest( x= t(as.matrix(x@data)), y=x@samples[, group],ntree=2000 )
-			t <- table( observed= x@samples[,group ], predicted = rf$predicted )
+			uObj <- paste( 'RFobj', group )
+			rf <- NULL
+			if (  is.null( x@usedObj[[uObj]])){
+				x@usedObj[[uObj]] <- randomForest( x= t(as.matrix(x@data)), y=x@samples[, group],ntree=2000 )
+			}
+			
+			t <- table( observed= x@samples[,group ], predicted = x@usedObj[[uObj]]$predicted )
 			i <- 0
 			r <- vector('numeric', ncol(t))
 			names(r) <- colnames(t)
