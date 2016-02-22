@@ -15,14 +15,14 @@
 #' @return a distRF object to be analyzed by pamNew
 #' @export 
 setGeneric('bestGrouping',
-		function ( x, groups , bestColname='QualifiedGrouping', cutoff=0.5){
+		function ( x, group , bestColname='QualifiedGrouping', cutoff=0.5){
 			standardGeneric('bestGrouping')
 		}
 )
 setMethod('function', signature = c ('SingleCellsNGS'),
-		definition = function (x, groups, bestColname='QualifiedGrouping' , cutoff=0.5) {
-			rf <- randomForest( x= t(as.matrix(x@data)), y=x@samples[,'group n= 16' ],ntree=2000 )
-			t <- table( observed= x@samples[,'group n= 16' ], predicted = rf$predicted )
+		definition = function (x, group, bestColname='QualifiedGrouping' , cutoff=0.5) {
+			rf <- randomForest( x= t(as.matrix(x@data)), y=x@samples[, group],ntree=2000 )
+			t <- table( observed= x@samples[,group ], predicted = rf$predicted )
 			i <- 0
 			r <- vector('numeric', ncol(t))
 			names(r) <- colnames(t)
@@ -35,16 +35,16 @@ setMethod('function', signature = c ('SingleCellsNGS'),
 				}
 			}
 			BAD <- which(r < cutoff )
-			x@samples$QualifiedGrouping <- as.numeric(x@samples[, 'group n= 16'])
+			x@samples[,bestColname] <- as.numeric(x@samples[, group])
 			for ( b in BAD ) {
-				x@samples$QualifiedGrouping[ which(x@samples$QualifiedGrouping == b)] <- 0
+				x@samples$QualifiedGrouping[ which(x@samples[,bestColname] == b)] <- 0
 			}
 			
-			for (i in 0:(length(table(x@samples$QualifiedGrouping))-1)){
-				modify <- which(x@samples$QualifiedGrouping >= i )
+			for (i in 0:(length(table(x@samples[,bestColname]))-1)){
+				modify <- which(x@samples[,bestColname] >= i )
 				if ( length(modify) == 0 ) { break}
-				while( length(which(x@samples$QualifiedGrouping[modify] == i)) == 0 ){
-					x@samples$QualifiedGrouping[modify] = x@samples$QualifiedGrouping[modify] -1
+				while( length(which(x@samples[modify,bestColname] == i)) == 0 ){
+					x@samples[modify,bestColname] = x@samples[modify, bestColname] -1
 				}
 			}
 			x
