@@ -15,5 +15,6 @@ Suggests:
 Collate:
     'NGSexpressionSet.R'
     'SingleCellsNGS.R'
+    'Grouping.R'
 LazyData: true
 RoxygenNote: 5.0.1
