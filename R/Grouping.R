@@ -62,7 +62,7 @@ setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 #' @aliases 'predict.rf,SingleCellsNGS-method
 #' @rdname 'predict.rf-methods
 #' @docType methods
-#' @description 
+#' @description simple prediction of groups using a random forest trained during the bestGrouping process.
 #' @param x the single cells ngs object
 #' @param rf the random forst model to use for the classification
 #' @param bestColname the column name to store the results in
@@ -70,7 +70,7 @@ setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 #' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('predict.rf',
-		function ( x, rf, ){
+		function ( x, rf,  bestColname='predicted group using random forest'){
 			standardGeneric('predict.rf')
 		}
 )
