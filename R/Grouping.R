@@ -40,9 +40,10 @@ setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 				}
 			}
 			BAD <- which(r < cutoff )
-			x@samples[,bestColname] <- as.numeric(x@samples[, group])
+			## remove an optional 'gr. ' from the group ids
+			x@samples[,bestColname] <- as.numeric(str_replace_all( x@samples[, group], 'gr. ', ''))
 			for ( b in BAD ) {
-				x@samples$QualifiedGrouping[ which(x@samples[,bestColname] == b)] <- 0
+				x@samples[ which(x@samples[,bestColname] == b), bestColname] <- 0
 			}
 			
 			for (i in 0:(length(table(x@samples[,bestColname]))-1)){
@@ -52,6 +53,7 @@ setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 					x@samples[modify,bestColname] = x@samples[modify, bestColname] -1
 				}
 			}
+			x@samples[,bestColname] <- paste( 'gr.', x@samples[,bestColname])
 			x
 		}
 )

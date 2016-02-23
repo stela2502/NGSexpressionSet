@@ -16,5 +16,8 @@ Collate:
     'NGSexpressionSet.R'
     'SingleCellsNGS.R'
     'Grouping.R'
+Depends:
+	randomForest,
+	stringr
 LazyData: true
 RoxygenNote: 5.0.1
