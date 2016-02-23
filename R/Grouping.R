@@ -8,7 +8,7 @@
 #' @description All groups that fail to be prediceted using the random forest are deemed ungrouped.
 #' @description All groups where less than 50 percent of the total samples geting classified as being from that group fail.
 #' @param x the single cells ngs object
-#' @param groups a vector of sample columns that should be checked (the most complex is used only)
+#' @param group a vector of sample columns that should be checked (the most complex is used only)
 #' @param bestColname the column name to store the best grouping in
 #' @param cutoff the cutoff percentage where all groups showing less than this percentacge of remapped samples are dropped
 #' @title description of function randomForest
@@ -62,24 +62,21 @@ setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 #' @aliases 'predict.rf,SingleCellsNGS-method
 #' @rdname 'predict.rf-methods
 #' @docType methods
-#' @description The function is using a randomForest classifier with 2000 trees to classify the given data using the given grooping
-#' @description All groups that fail to be prediceted using the random forest are deemed ungrouped.
-#' @description All groups where less than 50 percent of the total samples geting classified as being from that group fail.
+#' @description 
 #' @param x the single cells ngs object
-#' @param groups a vector of sample columns that should be checked (the most complex is used only)
-#' @param bestColname the column name to store the best grouping in
-#' @param cutoff the cutoff percentage where all groups showing less than this percentacge of remapped samples are dropped
-#' @title description of function randomForest
-#' @return a distRF object to be analyzed by pamNew
+#' @param rf the random forst model to use for the classification
+#' @param bestColname the column name to store the results in
+#' @title description of function predict.rf
+#' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('predict.rf',
-		function ( x, group='QualifiedGrouping'){
+		function ( x, rf, ){
 			standardGeneric('predict.rf')
 		}
 )
 setMethod('predict.rf', signature = c ('SingleCellsNGS'),
-		definition = function (x, group, bestColname='QualifiedGrouping' , cutoff=0.5) {
-			
+		definition = function (x, rf, bestColname='predicted group using random forest') {
+			predicted2 <-predict( rf, t(as.matrix(workingSet@data)) )
 			
 		}
 )
