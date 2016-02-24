@@ -17,7 +17,8 @@ Collate:
     'SingleCellsNGS.R'
     'Grouping.R'
 Depends:
-	randomForest,
+    RFclust.SGE,
+    StefansExpressionSet,
 	stringr
 LazyData: true
 RoxygenNote: 5.0.1
