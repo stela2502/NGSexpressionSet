@@ -123,10 +123,11 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= name )
 					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=name )
 				}
-				print ( "You shoudl wait some time now to let the calculation finish! - re-run the function")
+				print ( "You should wait some time now to let the calculation finish! check: system('qstat -f') - re-run the function")
 			}
 			else {
 				for ( i in 1:rep) {
+					name = paste(n,i,sep='_')
 					## read in the results
 					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') )
 					if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[name]]) ){
@@ -134,6 +135,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					}
 				}
 				for ( i in 1:rep ) {
+					name = paste(n,i,sep='_')
 					groups <- createGroups( x@usedObj[['rfObj']][[i]], k, name= paste(name,i,sep='_') )
 					x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
 					## create the required RF object
