@@ -123,29 +123,30 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= name )
 					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=name )
 				}
-				Sys.sleep( 10 * 60 )
+				print ( "You shoudl wait some time now to let the calculation finish! - re-run the function")
 			}
-			for ( i in 1:rep) {
-				## read in the results
-				x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') )
-				if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[name]]) ){
-					stop( "please re-run this function later - the clustring process has not finished!")
+			else {
+				for ( i in 1:rep) {
+					## read in the results
+					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') )
+					if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[name]]) ){
+						stop( "please re-run this function later - the clustring process has not finished!")
+					}
 				}
+				for ( i in 1:rep ) {
+					groups <- createGroups( x@usedObj[['rfObj']][[i]], k, name= paste(name,i,sep='_') )
+					x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
+					## create the required RF object
+					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
+					x@samples[, paste( 'RFgrouping', i) ] <-
+							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
+					print ( paste("Done with cluster",i))
+				}
+				x@samples[,summaryCol ] <- apply( x@samples[, c( paste('RFgrouping', 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
+				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
+				x@samples[,usefulCol] <- x@samples[,summaryCol ]
+				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
 			}
-			for ( i in 1:rep ) {
-				groups <- createGroups( x@usedObj[['rfObj']][[i]], k, name= paste(name,i,sep='_') )
-				x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
-				## create the required RF object
-				x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
-				x@samples[, paste( 'RFgrouping', i) ] <-
-						predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
-				print ( paste("Done with cluster",i))
-			}
-			x@samples[,summaryCol ] <- apply( x@samples[, c( paste('RFgrouping', 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
-			useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
-			x@samples[,usefulCol] <- x@samples[,summaryCol ]
-			x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
-			
 			x		
 		}
 )
