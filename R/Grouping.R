@@ -134,12 +134,15 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 						stop( "please re-run this function later - the clustring process has not finished!")
 					}
 				}
-				browser()
 				for ( i in 1:rep ) {
 					name = paste(n,i,sep='_')
 					groups <- createGroups( x@usedObj[['rfObj']][[i]], k=k, name=name )
 					x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
+					if ( length(k) == 1 ) {
+						colnames(x@usedObj[['rfExpressionSets']][[i]]@samples)[ncol(x@usedObj[['rfExpressionSets']][[i]]@samples)] <- paste('group n=',k)
+					}
 					## create the required RF object
+					m <- max(k)
 					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
 					x@samples[, paste( 'RFgrouping', i) ] <-
 							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
