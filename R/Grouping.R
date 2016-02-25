@@ -108,10 +108,10 @@ setGeneric('rfCluster',
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping' ) {
-			opath = paste( x@outpath,"RFclust.mp/",sep='' )
+			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
 			n= paste(x@name, 'RFclust',sep='_')
 			m <- max(k)
-			if ( is.null(x@usedObj[['rfExpressionSets']]) ){
+			if ( length(x@usedObj[['rfExpressionSets']]) == 0 ){
 				## start the calculations!
 				system( paste('rm -Rf',opath) )
 				x@usedObj[['rfExpressionSets']] <- list()
