@@ -134,7 +134,6 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 						stop( "please re-run this function later - the clustring process has not finished!")
 					}
 				}
-				browser()
 				for ( i in 1:rep ) {
 					name = paste(n,i,sep='_')
 					groups <- createGroups( x@usedObj[['rfObj']][[i]], k=k, name= paste(name,i,sep='_') )
