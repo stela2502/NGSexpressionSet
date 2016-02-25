@@ -123,7 +123,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= name )
 					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=name )
 				}
-				sys.sleep( 10 * 60 )
+				Sys.sleep( 10 * 60 )
 			}
 			for ( i in 1:rep) {
 				## read in the results
