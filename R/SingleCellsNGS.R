@@ -73,6 +73,7 @@ setGeneric('normalize', ## Name
 )
 setMethod('normalize', signature = c ('SingleCellsNGS'),
 		definition = function (  object, ..., reads=600, name='normalized' ) {
+			if ( ! object@snorm ) {
 			if ( length( object@samples$counts ) == 0 ) {
 				object@samples$counts <- apply( object@data, 2, sum)
 			}
@@ -89,6 +90,7 @@ setMethod('normalize', signature = c ('SingleCellsNGS'),
 				d <- sample(rep ( 1:n, object@raw[,i]) , reads)
 				t <- table(d)
 				object@data[ as.numeric(names(t)),i] <- as.numeric(t)
+			}
 			}
 			object
 		}
