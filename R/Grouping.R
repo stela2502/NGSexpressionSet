@@ -152,7 +152,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					name = paste(n,i,sep='_')
 					for ( a in k ){
 						x@usedObj[["rfExpressionSets"]][[i]]@samples <- 
-								x@usedObj[["rfExpressionSets"]][[i]]@samples[  
+								x@usedObj[["rfExpressionSets"]][[i]]@samples[ ,
 										is.na(match ( colnames(x@usedObj[["rfExpressionSets"]][[i]]@samples), paste('group n=',a) ))==T 
 								]
 					}
