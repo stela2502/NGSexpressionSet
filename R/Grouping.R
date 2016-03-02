@@ -114,7 +114,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
 			n= paste(x@name, 'RFclust',sep='_')
 			m <- max(k)
-			OPATH <- paste( x$outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
+			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
 			if ( plot ) {
 				if ( ! dir.exists(OPATH)){
 					dir.create( OPATH )
