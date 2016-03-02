@@ -113,7 +113,7 @@ setGeneric('rfCluster',
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F , name='RFclust') {
 			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
-			n= paste(x@name, 'RFclust',sep='_')
+			n= paste(x@name, name,sep='_')
 			m <- max(k)
 			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
 			if ( pics ) {
@@ -121,43 +121,43 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					dir.create( OPATH )
 				}
 			}
-			if ( length(x@usedObj[['rfExpressionSets']]) == 0 ){
+			if ( is.null(x@usedObj[['rfExpressionSets']][[name]]) ){
 				## start the calculations!
 				if ( dir.exists(opath)){
 					system( paste('rm -Rf',opath) )
 				}
-				x@usedObj[['rfExpressionSets']] <- list()
-				x@usedObj[['rfObj']] <- list()
 				total <- ncol(x@data)
 				if ( total-subset <= 20 ) {
 					stop( paste( 'You have only', total, 'samples in this dataset and request to draw random',subset, "samples, which leaves less than 20 cells to draw on random!") )
 				}
 				for ( i in 1:rep) {
-					name = paste(n,i,sep='_')
-					x@usedObj[['rfExpressionSets']][[ i ]] <- drop.samples( x, colnames(x@data)[sample(1:total,total-subset)], name )
-					x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= name )
-					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=name )
+					tname = paste(n,i,sep='_')
+					if ( is.null( x@usedObj[['rfExpressionSets']][[ i ]] ) ) {
+						x@usedObj[['rfExpressionSets']][[ i ]] <- drop.samples( x, colnames(x@data)[sample(1:total,total-subset)], tname )
+						x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= tname )
+					}
+					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=tname )
 				}
 				print ( "You should wait some time now to let the calculation finish! check: system('qstat -f') - re-run the function")
 			}
 			else {
 				for ( i in 1:rep) {
-					name = paste(n,i,sep='_')
+					tname = paste(n,i,sep='_')
 					## read in the results
 					try ( x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') ) )
-					if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[name]]) ){
+					if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[tname]]) ){
 						stop( "please re-run this function later - the clustring process has not finished!")
 					}
 				}
 				for ( i in 1:rep ) {
-					name = paste(n,i,sep='_')
+					tname = paste(n,i,sep='_')
 					for ( a in k ){
 						x@usedObj[["rfExpressionSets"]][[i]]@samples <- 
 								x@usedObj[["rfExpressionSets"]][[i]]@samples[ ,
 										is.na(match ( colnames(x@usedObj[["rfExpressionSets"]][[i]]@samples), paste('group n=',a) ))==T 
 								]
 					}
-					groups <- createGroups( x@usedObj[['rfObj']][[i]], k=k, name=name )
+					groups <- createGroups( x@usedObj[['rfObj']][[i]], k=k, name=tname )
 					x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
 					
 					le <- ncol(x@usedObj[['rfExpressionSets']][[i]]@samples)
