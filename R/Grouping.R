@@ -150,10 +150,17 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 				for ( i in 1:rep ) {
 					name = paste(n,i,sep='_')
+					browser()
+					for ( a in k ){
+						if ( ! is.null(x@usedObj[['rfExpressionSets']][[i]]@samples[, paste( 'RFgrouping', a) ]) ){
+							x@usedObj[['rfExpressionSets']][[i]]@samples[, paste( 'RFgrouping', a) ] <- NULL
+						}
+					}
 					groups <- createGroups( x@usedObj[['rfObj']][[i]], k=k, name=name )
 					x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
 					if ( length(k) == 1 ) {
-						colnames(x@usedObj[['rfExpressionSets']][[i]]@samples)[ncol(x@usedObj[['rfExpressionSets']][[i]]@samples)] <- paste('group n=',k)
+						le <- ncol(x@usedObj[['rfExpressionSets']][[i]]@samples)
+						colnames(x@usedObj[['rfExpressionSets']][[i]]@samples)[(le-length(k)):le] <- paste('group n=',k)
 					}
 					## create the required RF object
 					m <- max(k)
