@@ -101,16 +101,17 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @param subset how many cells should be randomly selected for the unsupervised clustering (default = 200)
 #' @param summaryCol the column storing the summary of the random forest clusterings (default= 'Combined_Group')
 #' @param usefulCol the column where all summaryCol groups with less than 10 cells have been merged into the group 0 (default= 'Usefull_Grouping')
-#' @param pics create a heatmap for each grouping that has been accessed (in the outpath folder) default = FALSE
+#' @param name if you want to run multiple RFclusterings on e.g. using different input genes you need to specify a name (default ='RFclust')
+#' @param pics create a heatmap for each grouping that has been accessed (in the outpath folder; default = FALSE)
 #' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('rfCluster',
-		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F){
+		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F , name='RFclust'){
 			standardGeneric('rfCluster')
 		}
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
-		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ) {
+		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F , name='RFclust') {
 			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
 			n= paste(x@name, 'RFclust',sep='_')
 			m <- max(k)
@@ -164,7 +165,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					
 					## create the required RF object
 					m <- max(k)
-					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
+					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m), bestColname = paste('OptimalGrouping',m ) )
 					x@samples[, paste( 'RFgrouping', i) ] <-
 							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( "RFobj group n=",m) ]], t(as.matrix(x@data)) )
 					if ( pics ){
