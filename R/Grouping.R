@@ -82,6 +82,8 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 
 #' @name rfCluster
 #' @aliases 'rfCluster,SingleCellsNGS-method
+#' @title rfCluster
+#' @name rfCluster-methods
 #' @docType methods
 #' @description This fucntion uses the RFclust.SGE to create fandomForest based unsupervised clusters on a subset of the data.
 #' @description Default is on 200 cells using all (provided) genes with 500 forests and 500 trees per forest for 5 repetitions.
@@ -99,18 +101,25 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @param subset how many cells should be randomly selected for the unsupervised clustering (default = 200)
 #' @param summaryCol the column storing the summary of the random forest clusterings (default= 'Combined_Group')
 #' @param usefulCol the column where all summaryCol groups with less than 10 cells have been merged into the group 0 (default= 'Usefull_Grouping')
+#' @param plot create a heatmap for each grouping that has been accessed (in the outpath folder) default = FALSE
 #' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('rfCluster',
-		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping'){
+		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', plot=F){
 			standardGeneric('rfCluster')
 		}
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
-		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping' ) {
+		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', plot=F ) {
 			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
 			n= paste(x@name, 'RFclust',sep='_')
 			m <- max(k)
+			OPATH <- paste( x$outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
+			if ( plot ) {
+				if ( ! dir.exists(OPATH)){
+					dir.create( OPATH )
+				}
+			}
 			if ( length(x@usedObj[['rfExpressionSets']]) == 0 ){
 				## start the calculations!
 				system( paste('rm -Rf',opath) )
@@ -146,15 +155,80 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
 					x@samples[, paste( 'RFgrouping', i) ] <-
 							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
+					if ( plot ){
+						png ( file=paste(OPATH,'/heqatmap_rfExpressionSets_',i,'.png', sep=''), width=800, height=1600 )
+						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
+						dev.off()
+						print ( paste('heatmap stored in', paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep='')))
+					}
 					print ( paste("Done with cluster",i))
 				}
 				x@samples[,summaryCol ] <- apply( x@samples[, c( paste('RFgrouping', 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
+				if ( plot ){
+					png ( file=paste(OPATH,'/heatmap_',summaryCol,'.png', sep=''), width=800, height=1600 )
+					gg.heatmap.list( x, groupCol=paste( '', i) )
+					dev.off()
+					print ( paste('heatmap stored in', paste(OPATH,'/heatmap_',i,'.png', sep='')))
+				}
 			}
 			x		
 		}
 )
+
+#' @name update.measurements
+#' @aliases update.measurements,SingleCellsNGS-method
+#' @rdname update.measurements-methods
+#' @docType methods
+#' @description This method is inspired by PMID:24531970; it calculates the expression variance over all samples
+#' @description and the fraction of cells expressing for each gene. This data is used by interesting_genes() to identify
+#' @description putatively interesting genes in a SingleCellNGS object.
+#' @param x the SingleCellsNGS object
+#' @title description of function update.measurements
+#' @export 
+setGeneric('update.measurements', ## Name
+		function ( x ) { ## Argumente der generischen Funktion
+			standardGeneric('update.measurements') ## der Aufruf von standardGeneric sorgt für das Dispatching
+		}
+)
+
+setMethod('update.measurements', signature = c ('SingleCellsNGS'),
+		definition = function ( x ) {
+			x@annotation$mean_var <- apply( x@data , 1, function (x ) { mean(x) / var(x) } )
+			x@annotation$fraction_expressing <-apply( x@data , 1, function (x ) { length(which(x > 0)) / length(x) })
+			x
+		} 
+)
+#' @name interesting_genes
+#' @aliases interesting_genes,SingleCellsNGS-method
+#' @rdname interesting_genes-methods
+#' @docType methods
+#' @description This method uses the values created by update.measurements() and selects the most interesting subset of genes.
+#' @param x the SingleCellsNGS object
+#' @param Min the minimal fraction of cells expresing the gene default=0.4
+#' @param Max the maximal fraction of cells expresing the gene default=0.8 
+#' @param genes how many genes you want to get back default=100
+#' @title description of function interesting_genes
+#' @export 
+setGeneric('interesting_genes', ## Name
+		function (x, Min=0.4, Max=0.8 , genes=100) { ## Argumente der generischen Funktion
+			standardGeneric('interesting_genes') ## der Aufruf von standardGeneric sorgt für das Dispatching
+		}
+)
+
+setMethod('interesting_genes', signature = c ('SingleCellsNGS'),
+		definition = function (x, Min=0.4, Max=0.8 , genes=100) {
+			if ( is.null(x@annotation$mean_var) ) {
+				x <- update.measurements ( x )
+			}
+			possible <- which( x@annotation$fraction_expressing > Min & x@annotation$fraction_expressing < Max )
+			order.possible <- order(x@annotation$mean_var[possible])
+			rownames(x@data)[possible[order.possible][1:genes]]
+		} 
+)
+
+
 
 
