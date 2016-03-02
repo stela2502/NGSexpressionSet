@@ -143,7 +143,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				for ( i in 1:rep) {
 					name = paste(n,i,sep='_')
 					## read in the results
-					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') )
+					try ( x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') ) )
 					if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[name]]) ){
 						stop( "please re-run this function later - the clustring process has not finished!")
 					}
