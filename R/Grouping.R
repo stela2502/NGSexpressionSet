@@ -161,6 +161,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					x@samples[, paste( 'RFgrouping', i) ] <-
 							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
 					if ( pics ){
+						browser()
 						png ( file=paste(OPATH,'/heqatmap_rfExpressionSets_',i,'.png', sep=''), width=800, height=1600 )
 						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
 						dev.off()
@@ -174,7 +175,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
 				if ( pics ){
 					png ( file=paste(OPATH,'/heatmap_',summaryCol,'.png', sep=''), width=800, height=1600 )
-					gg.heatmap.list( x, groupCol=paste( '', i) )
+					gg.heatmap.list( x, groupCol= summaryCol )
 					dev.off()
 					print ( paste('heatmap stored in', paste(OPATH,'/heatmap_',i,'.png', sep='')))
 				}
