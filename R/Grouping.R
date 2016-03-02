@@ -152,21 +152,22 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					name = paste(n,i,sep='_')
 					browser()
 					for ( a in k ){
-						if ( ! is.null(x@usedObj[['rfExpressionSets']][[i]]@samples[, paste( 'RFgrouping', a) ]) ){
-							x@usedObj[['rfExpressionSets']][[i]]@samples[, paste( 'RFgrouping', a) ] <- NULL
-						}
+						x@usedObj[["rfExpressionSets"]][[i]]@samples <- 
+								x@usedObj[["rfExpressionSets"]][[i]]@samples[  
+										is.na(match ( colnames(x@usedObj[["rfExpressionSets"]][[i]]@samples), paste('group n=',a) ))==T 
+								]
 					}
 					groups <- createGroups( x@usedObj[['rfObj']][[i]], k=k, name=name )
 					x@usedObj[['rfExpressionSets']][[i]]@samples <- cbind ( x@usedObj[['rfExpressionSets']][[i]]@samples, groups[,3:(2+length(k))] )
-					if ( length(k) == 1 ) {
-						le <- ncol(x@usedObj[['rfExpressionSets']][[i]]@samples)
-						colnames(x@usedObj[['rfExpressionSets']][[i]]@samples)[(le-length(k)):le] <- paste('group n=',k)
-					}
+					
+					le <- ncol(x@usedObj[['rfExpressionSets']][[i]]@samples)
+					colnames(x@usedObj[['rfExpressionSets']][[i]]@samples)[(le-length(k)+1):le] <- paste('group n=',k)
+					
 					## create the required RF object
 					m <- max(k)
 					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
 					x@samples[, paste( 'RFgrouping', i) ] <-
-							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
+							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( "RFobj group n=",m) ]], t(as.matrix(x@data)) )
 					if ( pics ){
 						png ( file=paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep=''), width=800, height=1600 )
 						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
