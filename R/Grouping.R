@@ -150,7 +150,6 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 				for ( i in 1:rep ) {
 					name = paste(n,i,sep='_')
-					browser()
 					for ( a in k ){
 						x@usedObj[["rfExpressionSets"]][[i]]@samples <- 
 								x@usedObj[["rfExpressionSets"]][[i]]@samples[ ,
