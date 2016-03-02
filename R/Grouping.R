@@ -111,7 +111,6 @@ setGeneric('rfCluster',
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ) {
-			browser()
 			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
 			n= paste(x@name, 'RFclust',sep='_')
 			m <- max(k)
@@ -123,10 +122,15 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			}
 			if ( length(x@usedObj[['rfExpressionSets']]) == 0 ){
 				## start the calculations!
-				system( paste('rm -Rf',opath) )
+				if ( dir.exists(opath)){
+					system( paste('rm -Rf',opath) )
+				}
 				x@usedObj[['rfExpressionSets']] <- list()
 				x@usedObj[['rfObj']] <- list()
 				total <- ncol(x@data)
+				if ( total-subset <= 100 ) {
+					stop( paste( 'You have only', total, 'samples in this dataset and request to draw random',subset, "samples, which leaves less than 100 cells to analyze in one go!") )
+				}
 				for ( i in 1:rep) {
 					name = paste(n,i,sep='_')
 					x@usedObj[['rfExpressionSets']][[ i ]] <- drop.samples( x, colnames(x@data)[sample(1:total,total-subset)], name )
