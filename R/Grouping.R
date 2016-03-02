@@ -101,21 +101,22 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @param subset how many cells should be randomly selected for the unsupervised clustering (default = 200)
 #' @param summaryCol the column storing the summary of the random forest clusterings (default= 'Combined_Group')
 #' @param usefulCol the column where all summaryCol groups with less than 10 cells have been merged into the group 0 (default= 'Usefull_Grouping')
-#' @param plot create a heatmap for each grouping that has been accessed (in the outpath folder) default = FALSE
+#' @param pics create a heatmap for each grouping that has been accessed (in the outpath folder) default = FALSE
 #' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('rfCluster',
-		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', plot=F){
+		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F){
 			standardGeneric('rfCluster')
 		}
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
-		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', plot=F ) {
+		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ) {
+			browser()
 			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
 			n= paste(x@name, 'RFclust',sep='_')
 			m <- max(k)
 			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
-			if ( plot ) {
+			if ( pics ) {
 				if ( ! dir.exists(OPATH)){
 					dir.create( OPATH )
 				}
@@ -155,7 +156,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m) )
 					x@samples[, paste( 'RFgrouping', i) ] <-
 							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[1]], t(as.matrix(x@data)) )
-					if ( plot ){
+					if ( pics ){
 						png ( file=paste(OPATH,'/heqatmap_rfExpressionSets_',i,'.png', sep=''), width=800, height=1600 )
 						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
 						dev.off()
@@ -167,7 +168,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
-				if ( plot ){
+				if ( pics ){
 					png ( file=paste(OPATH,'/heatmap_',summaryCol,'.png', sep=''), width=800, height=1600 )
 					gg.heatmap.list( x, groupCol=paste( '', i) )
 					dev.off()
