@@ -128,8 +128,8 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				x@usedObj[['rfExpressionSets']] <- list()
 				x@usedObj[['rfObj']] <- list()
 				total <- ncol(x@data)
-				if ( total-subset <= 100 ) {
-					stop( paste( 'You have only', total, 'samples in this dataset and request to draw random',subset, "samples, which leaves less than 100 cells to analyze in one go!") )
+				if ( total-subset <= 20 ) {
+					stop( paste( 'You have only', total, 'samples in this dataset and request to draw random',subset, "samples, which leaves less than 20 cells to draw on random!") )
 				}
 				for ( i in 1:rep) {
 					name = paste(n,i,sep='_')
