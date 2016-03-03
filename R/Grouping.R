@@ -20,7 +20,7 @@ setGeneric('bestGrouping',
 )
 setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 		definition = function (x, group, bestColname='QualifiedGrouping' , cutoff=0.5) {
-			uObj <- paste( 'RFobj', group )
+			uObj <- paste( 'predictive RFobj', group )
 			rf <- NULL
 			if (  is.null( x@usedObj[[uObj]])){
 				x@usedObj[[uObj]] <- randomForest( x= t(as.matrix(x@data)), y=factor(x@samples[, group]),ntree=2000 )
@@ -103,63 +103,71 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @param usefulCol the column where all summaryCol groups with less than 10 cells have been merged into the group 0 (default= 'Usefull_Grouping')
 #' @param name if you want to run multiple RFclusterings on e.g. using different input genes you need to specify a name (default ='RFclust')
 #' @param pics create a heatmap for each grouping that has been accessed (in the outpath folder; default = FALSE)
+#' @param nforest the numer of forests to grow for each rep (defualt = 500)
+#' @param ntree the numer of trees per forest (default = 500)
 #' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('rfCluster',
-		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F , name='RFclust'){
+		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ,nforest=500, ntree=500, name='RFclust'){
 			standardGeneric('rfCluster')
 		}
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
-		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F , name='RFclust') {
-			opath = paste( x@outpath,"/RFclust.mp",sep='' )
+		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ,nforest=500, ntree=500, name='RFclust') {
+			
 			n= paste(x@name, name,sep='_')
 			m <- max(k)
 			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
-			if ( pics ) {
-				if ( ! dir.exists(OPATH)){
-					dir.create( OPATH )
-				}
+			opath = paste( OPATH,"/RFclust.mp",sep='' )
+			
+			if ( ! dir.exists(OPATH)){
+				dir.create( OPATH )
 			}
-			if ( is.null(x@usedObj[['rfExpressionSets']][[name]]) ){
-				## start the calculations!
-				if ( dir.exists(opath)){
-					if ( opath == '' ) {
-						stop( "Are you mad? Not giving me an tmp path to delete?")
+			processed = FALSE
+			for ( i in 1:rep) {
+				tname = paste(n,i,sep='_')
+				
+				if ( is.null(x@usedObj[['rfExpressionSets']][[tname]]) ){
+					## start the calculations!
+					if ( dir.exists(opath)){
+						if ( opath == '' ) {
+							stop( "Are you mad? Not giving me an tmp path to delete?")
+						}
+						system( paste('rm -f ',opath,"/*",tname,'*', sep='') )
+					}else {
+						dir.create( opath )
 					}
-					system( paste('rm -f ',opath,"/*", sep='') )
-				}else {
-					dir.create( opath )
-				}
-				total <- ncol(x@data)
-				if ( total-subset <= 20 ) {
-					stop( paste( 'You have only', total, 'samples in this dataset and request to draw random',subset, "samples, which leaves less than 20 cells to draw on random!") )
-				}
-				for ( i in 1:rep) {
-					tname = paste(n,i,sep='_')
+					total <- ncol(x@data)
+					if ( total-subset <= 20 ) {
+						stop( paste( 'You have only', total, 'samples in this dataset and request to draw random',subset, "samples, which leaves less than 20 cells to draw on random!") )
+					}
 					if ( is.null(x@usedObj[['rfExpressionSets']])){
 						x@usedObj[['rfExpressionSets']] <- list()
 						x@usedObj[['rfObj']][[ i ]] <- list()
 					}
+					
 					if ( length( x@usedObj[['rfExpressionSets']] ) < i  ) {
 						x@usedObj[['rfExpressionSets']][[ i ]] <- drop.samples( x, colnames(x@data)[sample(c(1:total),total-subset)], tname )
-						x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= tname )
+						x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=slice, email=email, tmp.path=opath, name= tname )
 					}
-					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=tname )
+					names(x@usedObj[['rfExpressionSets']]) [i] <- tname
+					names(x@usedObj[['rfObj']]) [i] <- tname
+					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=nforest, ntree=ntree, name=tname )
+					if ( SGE){
+						print ( "You should wait some time now to let the calculation finish! check: system('qstat -f') -> re-run the function")
+					}
+					else {
+						print ( "You should wait some time now to let the calculation finish! -> re-run the function")
+						print ( "check: system( 'ps -Af | grep Rcmd | grep -v grep')")
+					}
 				}
-				print ( "You should wait some time now to let the calculation finish! check: system('qstat -f') - re-run the function")
-			}
-			else {
-				for ( i in 1:rep) {
-					tname = paste(n,i,sep='_')
+				else {
+					
 					## read in the results
-					try ( x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , name=paste(n,i,sep='_') ) )
+					try ( x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i]] , nforest=nforest, ntree=ntree, name=tname ) )
 					if ( ! is.null(x@usedObj[['rfObj']][[ i ]]@RFfiles[[tname]]) ){
 						stop( "please re-run this function later - the clustring process has not finished!")
 					}
-				}
-				for ( i in 1:rep ) {
-					tname = paste(n,i,sep='_')
 					for ( a in k ){
 						x@usedObj[["rfExpressionSets"]][[i]]@samples <- 
 								x@usedObj[["rfExpressionSets"]][[i]]@samples[ ,
@@ -175,25 +183,32 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					## create the required RF object
 					m <- max(k)
 					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m), bestColname = paste('OptimalGrouping',m ,name) )
+					## the 'predictive RFobj group n=' object is created by the bestGrouping call
 					x@samples[, paste( 'RFgrouping', i) ] <-
-							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( name, "group n=",m) ]], t(as.matrix(x@data)) )
+							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( 'predictive RFobj group n=',m) ]], t(as.matrix(x@data)) )
 					if ( pics ){
-						png ( file=paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep=''), width=800, height=1600 )
+						fn <- paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep='')
+						png ( file=fn, width=800, height=1600 )
 						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
 						dev.off()
-						print ( paste('heatmap stored in', paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep='')))
+						print ( paste('heatmap stored in', fn) )
 					}
 					print ( paste("Done with cluster",i))
+					processed = TRUE
 				}
+			}
+			if ( processed ) {
 				x@samples[,summaryCol ] <- apply( x@samples[, c( paste('RFgrouping', 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
 				if ( pics ){
-					png ( file=paste(OPATH,'/heatmap_',str_replace( summaryCol, '\\s', '_'),'.png', sep=''), width=800, height=1600 )
-					gg.heatmap.list( x, groupCol= summaryCol )
+					browser()
+					fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
+					png ( file=fn, width=800, height=1600 )
+					gg.heatmap.list( x, groupCol= usefulCol )
 					dev.off()
-					print ( paste('heatmap stored in', paste(OPATH,'/heatmap_',str_replace( summaryCol, '\\s', '_'),'.png', sep='')))
+					print ( paste('heatmap stored in', fn ))
 				}
 			}
 			x		

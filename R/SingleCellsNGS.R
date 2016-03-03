@@ -54,6 +54,17 @@ setMethod('SingleCellsNGS', signature = c ('data.frame'),
 			as(x,'SingleCellsNGS')
 		} )
 
+#' @name old_LTHSC
+#' @title Read counts for the expression data described in PMID:26430063
+#' @description The data was re-mapped against mouse mm10 using HISAT
+#' @description and quantified using the R subreads package and then restricted the old_LTHSC single cells only.
+#' @docType data
+#' @usage old_LTHSC
+#' @format SingleCellsNGS
+'old_LTHSC'
+
+
+
 #' @name normalize
 #' @aliases normalize,NGSexpressionSet-method
 #' @rdname normalize-methods
