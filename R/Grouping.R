@@ -112,7 +112,7 @@ setGeneric('rfCluster',
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F , name='RFclust') {
-			opath = paste( x@outpath,"/RFclust.mp/",sep='' )
+			opath = paste( x@outpath,"/RFclust.mp",sep='' )
 			n= paste(x@name, name,sep='_')
 			m <- max(k)
 			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
@@ -124,7 +124,10 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			if ( is.null(x@usedObj[['rfExpressionSets']][[name]]) ){
 				## start the calculations!
 				if ( dir.exists(opath)){
-					system( paste('rm -Rf',opath) )
+					if ( opath = '' ) {
+						stop( "Are you mad? Not giving me an tmp path to delete?")
+					}
+					system( paste('rm -f ',opath,"/*", sep='') )
 				}
 				total <- ncol(x@data)
 				if ( total-subset <= 20 ) {
