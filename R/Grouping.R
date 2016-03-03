@@ -123,12 +123,13 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			}
 			if ( is.null(x@usedObj[['rfExpressionSets']][[name]]) ){
 				## start the calculations!
-				browser()
 				if ( dir.exists(opath)){
 					if ( opath == '' ) {
 						stop( "Are you mad? Not giving me an tmp path to delete?")
 					}
 					system( paste('rm -f ',opath,"/*", sep='') )
+				}else {
+					dir.create( opath )
 				}
 				total <- ncol(x@data)
 				if ( total-subset <= 20 ) {
@@ -136,8 +137,12 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 				for ( i in 1:rep) {
 					tname = paste(n,i,sep='_')
-					if ( is.null( x@usedObj[['rfExpressionSets']][[ i ]] ) ) {
-						x@usedObj[['rfExpressionSets']][[ i ]] <- drop.samples( x, colnames(x@data)[sample(1:total,total-subset)], tname )
+					if ( is.null(x@usedObj[['rfExpressionSets']])){
+						x@usedObj[['rfExpressionSets']] <- list()
+						x@usedObj[['rfObj']][[ i ]] <- list()
+					}
+					if ( length( x@usedObj[['rfExpressionSets']] ) < i  ) {
+						x@usedObj[['rfExpressionSets']][[ i ]] <- drop.samples( x, colnames(x@data)[sample(c(1:total),total-subset)], tname )
 						x@usedObj[['rfObj']][[ i ]] <- RFclust.SGE ( dat=x@usedObj[['rfExpressionSets']][[ i ]]@data, SGE=SGE, slice=30, email=email, tmp.path=opath, name= tname )
 					}
 					x@usedObj[['rfObj']][[ i ]] <- runRFclust ( x@usedObj[['rfObj']][[ i ]] , nforest=500, ntree=500, name=tname )
