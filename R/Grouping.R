@@ -165,9 +165,9 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					
 					## create the required RF object
 					m <- max(k)
-					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m), bestColname = paste('OptimalGrouping',m ) )
+					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m), bestColname = paste('OptimalGrouping',m ,name) )
 					x@samples[, paste( 'RFgrouping', i) ] <-
-							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( "RFobj group n=",m) ]], t(as.matrix(x@data)) )
+							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( name, "group n=",m) ]], t(as.matrix(x@data)) )
 					if ( pics ){
 						png ( file=paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep=''), width=800, height=1600 )
 						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
