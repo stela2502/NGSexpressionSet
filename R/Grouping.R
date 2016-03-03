@@ -203,7 +203,6 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
 				if ( pics ){
-					browser()
 					fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
 					png ( file=fn, width=800, height=1600 )
 					gg.heatmap.list( x, groupCol= usefulCol )
