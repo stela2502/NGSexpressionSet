@@ -124,7 +124,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			if ( is.null(x@usedObj[['rfExpressionSets']][[name]]) ){
 				## start the calculations!
 				if ( dir.exists(opath)){
-					if ( opath = '' ) {
+					if ( opath == '' ) {
 						stop( "Are you mad? Not giving me an tmp path to delete?")
 					}
 					system( paste('rm -f ',opath,"/*", sep='') )
