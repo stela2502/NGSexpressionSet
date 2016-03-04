@@ -234,7 +234,15 @@ setGeneric('update.measurements', ## Name
 
 setMethod('update.measurements', signature = c ('SingleCellsNGS'),
 		definition = function ( x ) {
-			x@annotation$mean_var <- apply( x@data , 1, function (x ) { mean(x) / var(x) } )
+			x@annotation$mean_var <- apply( x@data , 1, function (x ) { 
+							a<-x[which(x > 0)]
+							if ( length(a) < 5 ){
+								0
+							}
+							else {
+								mean(a) / var(a) 
+							}
+						} )
 			x@annotation$fraction_expressing <-apply( x@data , 1, function (x ) { length(which(x > 0)) / length(x) })
 			x
 		} 
