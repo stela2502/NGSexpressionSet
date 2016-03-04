@@ -91,6 +91,7 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @description data using the 5 different unsupervised runs and all cluster ids from these runs are merged into the final cluster id.
 #' @description This <summaryCol> will be part of the return objects samples table, together with a <usefulCol> where
 #' @description all clusters with less than 10 cells have been merged into the 'gr. 0'.
+#' @description The final results will be reported as new columns in the samples table containing the 'name'
 #' @param x the single cells ngs object
 #' @param email your email to use together with the SGE option
 #' @param SGE whether to use the sun grid engine to calculate the rf grouping
@@ -99,8 +100,6 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @param bestColname the column name to store the results in
 #' @param k the numer of expected clusters (metter more than to view)
 #' @param subset how many cells should be randomly selected for the unsupervised clustering (default = 200)
-#' @param summaryCol the column storing the summary of the random forest clusterings (default= 'Combined_Group')
-#' @param usefulCol the column where all summaryCol groups with less than 10 cells have been merged into the group 0 (default= 'Usefull_Grouping')
 #' @param name if you want to run multiple RFclusterings on e.g. using different input genes you need to specify a name (default ='RFclust')
 #' @param pics create a heatmap for each grouping that has been accessed (in the outpath folder; default = FALSE)
 #' @param nforest the numer of forests to grow for each rep (defualt = 500)
@@ -108,13 +107,14 @@ setMethod('predict.rf', signature = c ('SingleCellsNGS'),
 #' @return a SingleCellsNGS object including the results and storing the RF object in the usedObj list (bestColname)
 #' @export 
 setGeneric('rfCluster',
-		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ,nforest=500, ntree=500, name='RFclust'){
+		function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, pics=F ,nforest=500, ntree=500, name='RFclust'){
 			standardGeneric('rfCluster')
 		}
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
-		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, summaryCol='Combined_Group', usefulCol='Usefull_Grouping', pics=F ,nforest=500, ntree=500, name='RFclust') {
-			
+		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, pics=F ,nforest=500, ntree=500, name='RFclust') {
+			summaryCol=paste( 'All_groups', name,sep='_')
+			usefulCol='Usefull_groups',name, sep='_')
 			n= paste(x@name, name,sep='_')
 			m <- max(k)
 			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
@@ -198,7 +198,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 			}
 			if ( processed ) {
-				x@samples[,summaryCol ] <- apply( x@samples[, c( paste('RFgrouping', 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
+				x@samples[,summaryCol ] <- apply( x@samples[, c( paste(paste('RFgrouping',name), 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
