@@ -114,7 +114,7 @@ setGeneric('rfCluster',
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, pics=F ,nforest=500, ntree=500, name='RFclust') {
 			summaryCol=paste( 'All_groups', name,sep='_')
-			usefulCol='Usefull_groups',name, sep='_')
+			usefulCol=paste ('Usefull_groups',name, sep='_')
 			n= paste(x@name, name,sep='_')
 			m <- max(k)
 			OPATH <- paste( x@outpath,"/",str_replace( x@name, '\\s', '_'), sep='')
@@ -124,6 +124,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				dir.create( OPATH )
 			}
 			processed = FALSE
+			single_res_col <- paste('RFgrouping',name)
 			for ( i in 1:rep) {
 				tname = paste(n,i,sep='_')
 				
@@ -184,7 +185,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					m <- max(k)
 					x@usedObj[['rfExpressionSets']][[i]] <- bestGrouping( x@usedObj[['rfExpressionSets']][[i]], group=paste('group n=', m), bestColname = paste('OptimalGrouping',m ,name) )
 					## the 'predictive RFobj group n=' object is created by the bestGrouping call
-					x@samples[, paste( 'RFgrouping', i) ] <-
+					x@samples[, paste( single_res_col, i) ] <-
 							predict( x@usedObj[['rfExpressionSets']][[i]]@usedObj[[paste( 'predictive RFobj group n=',m) ]], t(as.matrix(x@data)) )
 					if ( pics ){
 						fn <- paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep='')
@@ -198,7 +199,8 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 			}
 			if ( processed ) {
-				x@samples[,summaryCol ] <- apply( x@samples[, c( paste(paste('RFgrouping',name), 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
+				browser()
+				x@samples[,summaryCol ] <- apply( x@samples[, c( paste(single_res_col, 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
