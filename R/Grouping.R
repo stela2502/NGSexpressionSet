@@ -190,7 +190,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					if ( pics ){
 						fn <- paste(OPATH,'/heatmap_rfExpressionSets_',i,'.png', sep='')
 						png ( file=fn, width=800, height=1600 )
-						gg.heatmap.list( x, groupCol=paste( 'RFgrouping', i) )
+						gg.heatmap.list( x, groupCol=paste( single_res_col , i) )
 						dev.off()
 						print ( paste('heatmap stored in', fn) )
 					}
