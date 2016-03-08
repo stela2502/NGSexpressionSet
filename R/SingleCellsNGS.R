@@ -124,33 +124,36 @@ setMethod('normalize', signature = c ('SingleCellsNGS'),
 #' @export 
 setMethod('simpleAnova', signature = c ( 'SingleCellsNGS') ,
 		definition = function ( x, groupCol='GroupName', padjMethod='BH' ) {
-			x <- normalize(x)
-			significants <- apply ( x@data ,1, function(a) {
-						ids <- which(a > 0 )
-						not <- names(which (table(x@samples[ids,groupCol ]) < 10 ))
-						ids <- ids[ is.na(match(x@samples[ids,groupCol], not))==T]
-						if ( length(table(x@samples[ids,groupCol ]) ) > 1 ) {
-							anova( lm (a[ids] ~ x@samples[ids,groupCol ]))$"Pr(>F)"[1] 
-						}
-						else {
-							1
-						}
-					} )
-			adj.p <- p.adjust( significants, method = padjMethod)
-			res <- cbind(significants,adj.p )
-			res <- data.frame(cbind( rownames(res), res ))
-			colnames(res) <- c('genes', 'pvalue', paste('padj',padjMethod) )
-			res[,2] <- as.numeric(as.vector(res[,2]))
-			res[,3] <- as.numeric(as.vector(res[,3]))
-			if ( length (x@stats) == 0 ){
-				x@stats <- list ( 'simpleAnova' = res )
-			}
-			else {
-				x@stats[[length(x@stats)+1]] <- res
-				names(x@stats)[length(x@stats)] = 'simpleAnova'
+			if ( is.null(x@stats[[paste('simpleAnova', groupCol)]] )) {
+				x <- normalize(x)
+				significants <- apply ( x@data ,1, function(a) {
+							ids <- which(a > 0 )
+							not <- names(which (table(x@samples[ids,groupCol ]) < 10 ))
+							ids <- ids[ is.na(match(x@samples[ids,groupCol], not))==T]
+							if ( length(table(x@samples[ids,groupCol ]) ) > 1 ) {
+								anova( lm (a[ids] ~ x@samples[ids,groupCol ]))$"Pr(>F)"[1] 
+							}
+							else {
+								1
+							}
+						} )
+				adj.p <- p.adjust( significants, method = padjMethod)
+				res <- cbind(significants,adj.p )
+				res <- data.frame(cbind( rownames(res), res ))
+				colnames(res) <- c('genes', 'pvalue', paste('padj',padjMethod) )
+				res[,2] <- as.numeric(as.vector(res[,2]))
+				res[,3] <- as.numeric(as.vector(res[,3]))
+				if ( length (x@stats) == 0 ){
+					x@stats <- list ( 'simpleAnova' = res )
+				}
+				else {
+					x@stats[[length(x@stats)+1]] <- res
+					names(x@stats)[length(x@stats)] = paste('simpleAnova', groupCol)
+				}
 			}
 			x
-		})
+		}
+)
 
 #' @name z.score
 #' @aliases z.score,SingleCellsNGS-method
