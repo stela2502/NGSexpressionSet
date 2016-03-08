@@ -131,7 +131,7 @@ setMethod('simpleAnova', signature = c ( 'SingleCellsNGS') ,
 							not <- names(which (table(x@samples[ids,groupCol ]) < 10 ))
 							ids <- ids[ is.na(match(x@samples[ids,groupCol], not))==T]
 							if ( length(table(x@samples[ids,groupCol ]) ) > 1 ) {
-								anova( lm (a[ids] ~ x@samples[ids,groupCol ]))$"Pr(>F)"[1] 
+								try(anova( lm (a[ids] ~ x@samples[ids,groupCol ]))$"Pr(>F)"[1]) 
 							}
 							else {
 								1
