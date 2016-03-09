@@ -292,7 +292,7 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 				sum (which(t) < 10 ) < 20 && length(t) < 20
 			}
 			groupPaste <- function ( a, g, name ) {
-				if ( ! is.na(match (a@samples[,name], ,colnames(a)) ) ) {
+				if ( ! is.na(match (name,colnames(a@samples)) ) ) {
 					stop( paste( "The column",name,'already exists - STOP') )
 				}
 				browser()
@@ -307,7 +307,6 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 			names = c(paste( namePrefix, 'All (',length(groups),')' ))
 			for ( i in 2:length(groups) ) {
 				## then paste them best to worst together and check where you get better stats
-				browser()
 				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
 				names<- c(names, paste( namePrefix, i,'/',length(groups) ))
 			}
