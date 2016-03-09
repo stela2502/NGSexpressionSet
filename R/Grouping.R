@@ -199,18 +199,13 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 			}
 			if ( processed ) {
-				try (combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) ), slient =T)
+				try ( {combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )} , silent =T)
 				if ( all.equal(as.vector(combine$res), rep('', rep)) ) {
 					warn( 'No really usful grouüping of the data obtained - I recommend re-run with more trees/forests and a new name')
 				}
 				else {
 					x <- combine$x
 					colnames(x@samples)[which( colnames(x@samples) == names(combine$res)[1] )] <- usefulCol
-					browser()
-					x@samples[,summaryCol ] <- apply( x@samples[, combine],1,function (x ) { paste( x, collapse=' ') } )
-					useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
-					x@samples[,usefulCol] <- x@samples[,summaryCol ]
-					x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
 					if ( pics ){
 						fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
 						png ( file=fn, width=800, height=1600 )
