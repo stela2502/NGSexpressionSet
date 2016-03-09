@@ -295,7 +295,6 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 				if ( ! is.na(match (name,colnames(a@samples)) ) ) {
 					stop( paste( "The column",name,'already exists - STOP') )
 				}
-				browser()
 				a@samples[, name ] <- apply( a@samples[, g ],1, function (x) {paste(x,collapse= ' ') } )
 				a
 			}
