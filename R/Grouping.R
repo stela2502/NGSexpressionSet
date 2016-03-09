@@ -201,7 +201,8 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			if ( processed ) {
 				try ( {combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )} , silent =T)
 				if ( all.equal(as.vector(combine$res), rep('', rep)) ) {
-					warn( 'No really usful grouüping of the data obtained - I recommend re-run with more trees/forests and a new name')
+					print( 'No really usful grouping of the data obtained - I recommend re-run with more trees/forests and a new name')
+					x <- combine$x
 				}
 				else {
 					x <- combine$x
@@ -214,7 +215,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 						print ( paste('heatmap stored in', fn ))
 					}
 				}
-				
+				x$usedObj$combinationAnalysis <- list ( 'initial_significants' = combine$names, 'merged_significants' = combine$res )				
 			}
 			x		
 		}
