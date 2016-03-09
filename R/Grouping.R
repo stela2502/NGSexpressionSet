@@ -307,6 +307,7 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 			names = c(paste( namePrefix, 'All (',length(groups),')' ))
 			for ( i in 2:length(groups) ) {
 				## then paste them best to worst together and check where you get better stats
+				browser()
 				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
 				names<- c(names, paste( namePrefix, i,'/',length(groups) ))
 			}
