@@ -199,19 +199,27 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 			}
 			if ( processed ) {
-				combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )
-				browser()
-				x@samples[,summaryCol ] <- apply( x@samples[, combine],1,function (x ) { paste( x, collapse=' ') } )
-				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
-				x@samples[,usefulCol] <- x@samples[,summaryCol ]
-				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
-				if ( pics ){
-					fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
-					png ( file=fn, width=800, height=1600 )
-					gg.heatmap.list( x, groupCol= usefulCol )
-					dev.off()
-					print ( paste('heatmap stored in', fn ))
+				try (combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) ), slient =T)
+				if ( all.equal(as.vector(combine$res), rep('', rep)) ) {
+					warn( 'No really usful grouüping of the data obtained - I recommend re-run with more trees/forests and a new name')
 				}
+				else {
+					x <- combine$x
+					colnames(x@samples)[which( colnames(x@samples) == names(combine$res)[1] )] <- usefulCol
+					browser()
+					x@samples[,summaryCol ] <- apply( x@samples[, combine],1,function (x ) { paste( x, collapse=' ') } )
+					useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
+					x@samples[,usefulCol] <- x@samples[,summaryCol ]
+					x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
+					if ( pics ){
+						fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
+						png ( file=fn, width=800, height=1600 )
+						gg.heatmap.list( x, groupCol= usefulCol )
+						dev.off()
+						print ( paste('heatmap stored in', fn ))
+					}
+				}
+				
 			}
 			x		
 		}
@@ -300,11 +308,12 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 				a
 			}
 
-			## first oder the group cols by the output of identifyBestGrouping
+			## first oder the group cols by the output of identifyBestGrouping			
 			te <- qualityTest ( x, groups, numbers=T , cut=cut)
 			x <- te$x
 			groups <- groups[ order( te$res, decreasing =T ) ]
 			names = c(paste( namePrefix, 'All (',length(groups),')' ))
+			x <- groupPaste (x, groups, names)
 			for ( i in 2:length(groups) ) {
 				## then paste them best to worst together and check where you get better stats
 				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
