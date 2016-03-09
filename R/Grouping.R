@@ -215,7 +215,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 						print ( paste('heatmap stored in', fn ))
 					}
 				}
-				x$usedObj$combinationAnalysis <- list ( 'initial_significants' = combine$names, 'merged_significants' = combine$res )				
+				x@usedObj$combinationAnalysis <- list ( 'initial_significants' = combine$names, 'merged_significants' = combine$res )				
 			}
 			x		
 		}
