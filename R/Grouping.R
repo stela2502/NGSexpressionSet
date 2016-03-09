@@ -112,7 +112,7 @@ setGeneric('rfCluster',
 		}
 )
 setMethod('rfCluster', signature = c ('SingleCellsNGS'),
-		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, pics=F ,nforest=500, ntree=500, name='RFclust') {
+		definition = function ( x, rep=5, SGE=F, email, k=16, slice=30, subset=200, pics=F ,nforest=500, ntree=1000, name='RFclust') {
 			summaryCol=paste( 'All_groups', name,sep='_')
 			usefulCol=paste ('Usefull_groups',name, sep='_')
 			n= paste(x@name, name,sep='_')
@@ -200,7 +200,7 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			}
 			if ( processed ) {
 				combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )
-				
+				browser()
 				x@samples[,summaryCol ] <- apply( x@samples[, combine],1,function (x ) { paste( x, collapse=' ') } )
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
