@@ -248,11 +248,11 @@ setMethod('qualityTest', signature = c ('SingleCellsNGS'),
 				g <-which(x@stats[[grname]][,3] < cut)
 				
 				if ( numbers ){
-					res[i] <- length( x@stats[[length(x@stats)]][which(x@stats[[grname]][,3]< cut),1] )
+					res[i] <- length( x@stats[[grname]][which(x@stats[[grname]][,3]< cut),1] )
 				}
 				else {
 					if ( length( g ) > 0 ) {
-						res[i] <- paste(collapse=" ",as.vector(x@stats[[length(x@stats)]][which(x@stats[[length(x@stats)]][,3] < cut),1] ))
+						res[i] <- paste(collapse=" ",as.vector(x@stats[[grname]][which(x@stats[[grname]][,3] < cut),1] ))
 					}
 					else{
 						res[i] <- ''
@@ -291,16 +291,12 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 			groupLengthT <- function ( a, g ) {
 				sum (which(t) < 10 ) < 20 && length(t) < 20
 			}
-			groupPaste <- function ( a, g, name, numbers=F ) {
+			groupPaste <- function ( a, g, name ) {
 				if ( ! is.na(match (a@samples[,name], ,colnames(a)) ) ) {
 					stop( paste( "The column",name,'already exists - STOP') )
 				}
-				if ( numbers ){
-					a@samples[, name ] <- apply( a@samples[, g ],1, length)
-				}
-				else {
-					a@samples[, name ] <- apply( a@samples[, g ],1, function (x) {paste(x,collapse= ' ') } )
-				}
+				browser()
+				a@samples[, name ] <- apply( a@samples[, g ],1, function (x) {paste(x,collapse= ' ') } )
 				a
 			}
 
@@ -309,7 +305,6 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 			x <- te$x
 			groups <- groups[ order( te$res, decreasing =T ) ]
 			names = c(paste( namePrefix, 'All (',length(groups),')' ))
-			browser()
 			for ( i in 2:length(groups) ) {
 				## then paste them best to worst together and check where you get better stats
 				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
