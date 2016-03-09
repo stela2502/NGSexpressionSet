@@ -275,17 +275,18 @@ setMethod('qualityTest', signature = c ('SingleCellsNGS'),
 #' @param x the SingleCellsNGS
 #' @param groups the colnames (samples) that contain the grouping information (default)
 #' @param namePrefix a common name prefix for this analysis
+#' @param cut define the p value cut off for the test ( if too view signfican genes are detected at 0.05)
 #' @return A list containing the number of significant genes in each possible combination of groups and the SingleCellsNGS object containg all annotations and stats.
 #' @title description of function identifyBestGrouping
 #' @export 
 setGeneric('identifyBestGrouping', ## Name
-		function (x, groups, namePrefix='identifyBestGrouping') { ## Argumente der generischen Funktion
+		function (x, groups, namePrefix='identifyBestGrouping', cut=0.05) { ## Argumente der generischen Funktion
 			standardGeneric('identifyBestGrouping') ## der Aufruf von standardGeneric sorgt für das Dispatching
 		}
 )
 
 setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
-		definition = function (x, groups, namePrefix='identifyBestGrouping') {
+		definition = function (x, groups, namePrefix='identifyBestGrouping', cut=0.05) {
 			## I do not want to loose all so get me the most out of this gouping
 			ret <- list( 'x' = 0, groups = 0 )
 			groupLengthT <- function ( a, g ) {
@@ -300,7 +301,7 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 			}
 
 			## first oder the group cols by the output of identifyBestGrouping
-			te <- qualityTest ( x, groups, numbers=T )
+			te <- qualityTest ( x, groups, numbers=T , cut=cut)
 			x <- te$x
 			groups <- groups[ order( te$res, decreasing =T ) ]
 			names = c(paste( namePrefix, 'All (',length(groups),')' ))
@@ -309,8 +310,8 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
 				names<- c(names, paste( namePrefix, i,'/',length(groups) ))
 			}
-			ret <- qualityTest ( x, names )
-			ret$names <- names
+			ret <- qualityTest ( x, names, cut=cut )
+			ret$names <- te$res
 			ret
 } )
 
