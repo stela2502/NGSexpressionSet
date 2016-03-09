@@ -309,7 +309,9 @@ setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
 				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
 				names<- c(names, paste( namePrefix, i,'/',length(groups) ))
 			}
-			qualityTest ( x, names )
+			ret <- qualityTest ( x, names )
+			ret$names <- names
+			ret
 } )
 
 
