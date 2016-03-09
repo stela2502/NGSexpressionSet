@@ -199,8 +199,9 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 				}
 			}
 			if ( processed ) {
-				browser()
-				x@samples[,summaryCol ] <- apply( x@samples[, c( paste(single_res_col, 1:rep))],1,function (x ) { paste( x, collapse=' ') } )
+				combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )
+				
+				x@samples[,summaryCol ] <- apply( x@samples[, combine],1,function (x ) { paste( x, collapse=' ') } )
 				useful_groups <- names( which(table( x@samples[,summaryCol ] ) > 10 ))
 				x@samples[,usefulCol] <- x@samples[,summaryCol ]
 				x@samples[is.na(match ( x@samples[,summaryCol], unique(useful_groups)))==T,usefulCol] <- 'gr. 0'
@@ -215,6 +216,96 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 			x		
 		}
 )
+
+#' @name qualityTest
+#' @aliases qualityTest,SingleCellsNGS-method
+#' @rdname qualityTest-methods
+#' @docType methods
+#' @description This function calculates an anova test for the groupCol nd all data.
+#' @return A list containing the updated 'x' SingleCellsNGS object and res a vector of pasted gene names that turned out to be significantly different.
+#' @param x The SingleCellsNGS object
+#' @param groups the group name to clister the data (default=NULL)
+#' @param cut the p value cut off (BenjaminHochberg corrected; default=0.05)
+#' @title description of function qualityTest
+#' @export 
+setGeneric('qualityTest', ## Name
+		function (x, groups=NULL, cut=0.05 ) { ## Argumente der generischen Funktion
+			standardGeneric('qualityTest') ## der Aufruf von standardGeneric sorgt für das Dispatching
+		}
+)
+
+setMethod('qualityTest', signature = c ('SingleCellsNGS'),
+		definition = function (x, groups=NULL, cut=0.05 ) {
+			if (is.null(groups) ) {
+				stop( "please give me a vector of columns to check!" )
+			}
+			res <- vector( 'numeric', length(groups))
+			names(res) <- groups
+			for ( i in 1:length(groups) ) {
+				x <- simpleAnova( x,groups[i] )
+				g <-which(x@stats[[length(x@stats)]][,3] < cut)
+				if ( length( g ) > 0 ) {
+					res[i] <- paste(collapse=" ",as.vector(x@stats[[length(x@stats)]][which(x@stats[[length(x@stats)]][,3] < cut),1] ))
+				}
+				else{
+					res[i] <- ''
+				}
+			}
+			list ( res = res, x=x)
+		} )
+
+#' @name identifyBestGrouping
+#' @aliases identifyBestGrouping,SingleCellsNGS-method
+#' @rdname identifyBestGrouping-methods
+#' @docType methods
+#' @description This function compares several groupings to each other. 
+#' @description In addition the groupings are combined in a way, that if a sample end up in group 1 in grouing A but in group 2 in groupung B
+#' @description it might be something else than a sample ending up in group 1 for both.
+#' @description The quality of the groupings will be accessed in two stated (1) there should not be too many small groups and
+#' @description (2) the genes should be differentially expressed in these groups. The differential expression is accessed 
+#' @description using a straight forward anova approach (excluding the not called genes for a SingleCellsNGS object).
+#' @param x the SingleCellsNGS
+#' @param groups the colnames (samples) that contain the grouping information (default)
+#' @param namePrefix a common name prefix for this analysis
+#' @return A list containing the number of significant genes in each possible combination of groups and the SingleCellsNGS object containg all annotations and stats.
+#' @title description of function identifyBestGrouping
+#' @export 
+setGeneric('identifyBestGrouping', ## Name
+		function (x, groups, namePrefix='identifyBestGrouping') { ## Argumente der generischen Funktion
+			standardGeneric('identifyBestGrouping') ## der Aufruf von standardGeneric sorgt für das Dispatching
+		}
+)
+
+setMethod('identifyBestGrouping', signature = c ('SingleCellsNGS'),
+		definition = function (x, groups, namePrefix='identifyBestGrouping') {
+			## I do not want to loose all so get me the most out of this gouping
+			ret <- list( 'x' = 0, groups = 0 )
+			groupLengthT <- function ( a, g ) {
+				sum (which(t) < 10 ) < 20 && length(t) < 20
+			}
+			groupPaste <- function ( a, g, name ) {
+				if ( ! is.na(match (a@samples[,name], ,colnames(a)) ) ) {
+					stop( paste( "The column",name,'already exists - STOP') )
+				}
+				a@samples[, name ] <- apply( a@samples[, g ],1, function (x) {paste(x,collapse= ' ') } )
+				a
+			}
+
+			## first oder the group cols by the output of identifyBestGrouping
+			te <- qualityTest ( x, groups )
+			x <- te$x
+			groups <- groups[ order( te$res ) ]
+			names = c(paste( namePrefix, 'All (',length(groups),')' ))
+			browser()
+			for ( i in 2:length(groups) ) {
+				## then paste them best to worst together and check where you get better stats
+				x <- groupPaste( x, groups[1:i], paste( namePrefix, i,'/',length(groups) ) )
+				names<- c(names, paste( namePrefix, i,'/',length(groups) ))
+			}
+			qualityTest ( x, names )
+} )
+
+
 
 #' @name update.measurements
 #' @aliases update.measurements,SingleCellsNGS-method
