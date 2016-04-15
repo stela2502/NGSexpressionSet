@@ -1,10 +1,3 @@
-library('StefansExpressionSet')
-require('StefansExpressionSet')
-library('DESeq')
-require('DESeq')
-library('Rsubread')
-require('Rsubread')
-
 #' @name NGSexpressionSet
 #' @title NGSexpressionSet
 #' @docType package
@@ -333,24 +326,17 @@ setGeneric('createStats', ## Name
 
 setMethod('createStats', signature = c ('NGSexpressionSet'),
 	definition = function (x, condition, files=F, A=NULL, B=NULL) {
+		stop( "Not implemented / broken!")
 	if ( nrow(x@data) < 2e+4 ) {
 	    stop ( "Please calculate the statistics only for the whole dataset!" )
 	}
 	if ( length( grep ( condition, colnames(x@samples))) > 0 ) {
 		condition = factor( x@samples[,condition] )
 	}
-	if ( exists( 'raw', where=x) ){
-		cds <- newCountDataSet(x@raw, condition)
-	}else {
-		cds <- newCountDataSet(x@data, condition)
+	if ( ! x@snorm ){
+		x<-normalize(x)
 	}
-	cds <- estimateSizeFactors(cds)
-	# sizeFactors(cds)
-	cds <- estimateDispersions(cds)
-	vsdFull = varianceStabilizingTransformation( cds )
-	res <- list()
-	ln= 0
-	na <- c()
+	condition = x@samples[,condition]
 	conditions <- as.vector(unique(condition))
 	if ( ! is.null(A) && ! is.null(B)) {
 		ln = ln +1

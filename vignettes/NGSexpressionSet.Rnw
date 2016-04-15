@@ -1,0 +1,152 @@
+\documentclass{article}
+
+
+\begin{document}
+
+
+\section{Introduction}
+
+The NGSexpressionSet R S4 class has been produced to make my live easier. It is
+not developed for a larger audience and therefore some functions might not be
+flexible enought for all workflows.
+
+The overall aim of this package is to (1) keep all analysis results in one
+object and (2) simplify the plotting by using the previousely stored objects.
+
+The auim of this document is not to explain all options for the functions, but
+to give one working example.
+
+But not too much here lets start.
+
+<<libLoad, echo=FALSE >>=
+	library(devtools)
+	load_all(pkg='../')
+@
+
+
+\section{Get your data into the object}
+
+The package comes with example data; A data.frame containing count data
+published in PMID25158935 re-mapped and re-quantified using DEseq (\Sexpr{dim(PMID25158935exp)}) and one
+data.frame containing the sample information
+(\Sexpr{dim(PMID25158935samples)}):
+
+<<counts>>=
+	head(PMID25158935exp)
+@
+
+These two tables are loaded into a NGSexpressionSet object using the command:
+<<createObject>>=
+	PMID25158935 <- NGSexpressionSet( 
+			PMID25158935exp, 
+			PMID25158935samples, 
+			Analysis = NULL, 
+			name='PMID25158935', 
+			namecol='Sample',	
+			namerow= 'GeneID', 
+			usecol=NULL , 
+			outpath = ''
+	)
+@
+
+Here you already see, that the object is tailored to my needs:
+The options Analysis and usecol can be used to subselect samples in the samples
+table and create a smaller than possible object from the count data.
+Please use the R help system to get more information on all functions.
+And the object does print like that:
+
+<<objPrint>>=
+	PMID25158935
+@
+
+This should be quite straight forward.
+
+\section{Subsetting the object}
+
+This is the main purpose why I created the class in the first place. An easy way
+to consitantly subsett multiple tables at the same time.
+
+I have implemented thwo functions: "reduce.Obj" which subsets the object to a
+list of genes and "drop.samples" which does exactly that.
+
+<<reduceObj>>=
+	reduced <- reduce.Obj(PMID25158935, 
+			sample(rownames(PMID25158935@data), 100), 
+			name="100 genes" )
+	reduced
+@
+
+<<drop.Samples>>=
+	dropped <- drop.samples(
+			PMID25158935, 
+			colnames(PMID25158935@data)[1:3], 
+			name='3 samples dropped'
+	)
+	dropped
+@
+
+\section{Unconventional checks}
+
+I have implemented a rather unconventional check for the NGS data objects:
+reads.taken(). This function checks the percentage of reads consumed by the top
+5 percent of genes and thereby creates a measurement of the library depth.
+
+I have created a rule of thub: a good (mouse) expression dataset should
+not use more than 77\% of the reads in the top 5\% of the genes.
+
+<<reads.taken>>=
+	reads.taken(PMID25158935)$reads.taken
+@
+
+And this dataset is a very good one. And as I am lasy there is another function,
+that directly gives the names for the bad samples back: check.depth()
+
+<<check.depth>>=
+	check.depth(PMID25158935,cutoff=0.62 )
+@
+
+You see I have lowered the cutoff so that I find bad samples in this extremely
+good dataset.
+
+
+\section{Statistics}
+
+The statistic analysis is also keeping my workload low: One call runs them all.
+
+But unfortunaltely this is broken! Need to fix that :-(
+)
+<<statistics>>=
+	## from these values I can choose to create statistics:
+	colnames(PMID25158935@samples)
+	## and the GroupName might be the best to start from
+	table(PMID25158935@samples$GroupName)
+	withStats <- createStats( PMID25158935, 'GroupName' )
+@
+
+\section{Plotting}
+
+This is the second most important part of the object.
+
+\begin{figure}
+\label{ggplot.gene}
+<<ggplot.gene>>=
+	ggplot.gene (PMID25158935, 'Mpo', groupCol='GroupName' )
+@
+\end{figure}
+
+\begin{figure}
+\label{gg.heatmap.list}
+<<gg.heatmap.list>>=
+	gg.heatmap.list (PMID25158935, c('Mpo', 'Gata1', 'Foxo1'), groupCol='GroupName' )
+@
+\end{figure}
+
+I will first explain how to create the ggplot2 plots also used for our shiny
+server. The function ggplot.gene is described in figure \ref{ggplot.gene} on
+page \pageref{ggplot.gene}; the function gg.heatmap.list is described in figure
+\ref{gg.heatmap.list} on page \pageref{gg.heatmap.list}.
+
+
+
+
+\end{document}

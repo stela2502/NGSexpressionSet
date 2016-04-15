@@ -25,7 +25,6 @@ setMethod('bestGrouping', signature = c ('SingleCellsNGS'),
 			if (  is.null( x@usedObj[[uObj]])){
 				x@usedObj[[uObj]] <- randomForest( x= t(as.matrix(x@data)), y=factor(x@samples[, group]),ntree=2000 )
 			}
-			
 			t <- table( observed= x@samples[,group ], predicted = x@usedObj[[uObj]]$predicted )
 			i <- 0
 			r <- vector('numeric', ncol(t))
