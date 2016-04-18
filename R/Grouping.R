@@ -197,25 +197,25 @@ setMethod('rfCluster', signature = c ('SingleCellsNGS'),
 					processed = TRUE
 				}
 			}
-			if ( processed ) {
-				try ( {combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )} , silent =T)
-				if ( all.equal(as.vector(combine$res), rep('', rep)) ) {
-					print( 'No really usful grouping of the data obtained - I recommend re-run with more trees/forests and a new name')
-					x <- combine$x
-				}
-				else {
-					x <- combine$x
-					colnames(x@samples)[which( colnames(x@samples) == names(combine$res)[1] )] <- usefulCol
-					if ( pics ){
-						fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
-						png ( file=fn, width=800, height=1600 )
-						gg.heatmap.list( x, groupCol= usefulCol )
-						dev.off()
-						print ( paste('heatmap stored in', fn ))
-					}
-				}
-				x@usedObj$combinationAnalysis <- list ( 'initial_significants' = combine$names, 'merged_significants' = combine$res )				
-			}
+#			if ( processed ) {
+#				try ( {combine <- identifyBestGrouping( x, c( paste(single_res_col, 1:rep)) )} , silent =T)
+#				if ( all.equal(as.vector(combine$res), rep('', rep)) ) {
+#					print( 'No really usful grouping of the data obtained - I recommend re-run with more trees/forests and a new name')
+#					x <- combine$x
+#				}
+#				else {
+#					x <- combine$x
+#					colnames(x@samples)[which( colnames(x@samples) == names(combine$res)[1] )] <- usefulCol
+#					if ( pics ){
+#						fn <- paste(OPATH,'/heatmap_',str_replace( usefulCol, '\\s', '_'),'.png', sep='')
+#						png ( file=fn, width=800, height=1600 )
+#						gg.heatmap.list( x, groupCol= usefulCol )
+#						dev.off()
+#						print ( paste('heatmap stored in', fn ))
+#					}
+#				}
+#				x@usedObj$combinationAnalysis <- list ( 'initial_significants' = combine$names, 'merged_significants' = combine$res )				
+#			}
 			x		
 		}
 )
